@@ -3,6 +3,7 @@ import '../app_settings.dart';
 import '../app_strings.dart';
 import 'coming_soon_screen.dart';
 import 'settings_screen.dart';
+import 'strength_screen.dart';
 import 'timer_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -59,10 +60,7 @@ class HomeScreen extends StatelessWidget {
                           label: s('strength'),
                           onTap: () => Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (_) => const ComingSoonScreen(
-                                titleKey: 'strength',
-                                icon: Icons.fitness_center,
-                              ),
+                              builder: (_) => const StrengthScreen(),
                             ),
                           ),
                         ),
