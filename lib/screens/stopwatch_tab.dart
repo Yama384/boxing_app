@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../app_settings.dart';
+import '../app_strings.dart';
 import '../time_format.dart';
+import '../widgets/circular_timer_display.dart';
 
 class StopwatchTab extends StatefulWidget {
   const StopwatchTab({super.key});
@@ -43,35 +46,42 @@ class _StopwatchTabState extends State<StopwatchTab> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            formatSeconds(_seconds),
-            style: const TextStyle(
-              fontSize: 72,
-              fontWeight: FontWeight.bold,
-              fontFeatures: [FontFeature.tabularFigures()],
-            ),
-          ),
-          const SizedBox(height: 40),
-          Row(
+    return ValueListenableBuilder<Locale>(
+      valueListenable: AppSettings.locale,
+      builder: (context, locale, _) {
+        final s = AppStrings.of(locale);
+        return Center(
+          child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              ElevatedButton(
-                onPressed: _isRunning ? _pause : _start,
-                child: Text(_isRunning ? 'Pause' : 'Start'),
+              CircularTimerDisplay(
+                progress: const AlwaysStoppedAnimation(1.0),
+                child: Text(
+                  formatSeconds(_seconds),
+                  style: TextStyle(
+                    fontSize: 56,
+                    fontWeight: FontWeight.bold,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
               ),
-              const SizedBox(width: 16),
-              OutlinedButton(
-                onPressed: _reset,
-                child: const Text('Reset'),
+              const SizedBox(height: 40),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: _isRunning ? _pause : _start,
+                    child: Text(_isRunning ? s('pause') : s('start')),
+                  ),
+                  const SizedBox(width: 16),
+                  OutlinedButton(onPressed: _reset, child: Text(s('reset'))),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

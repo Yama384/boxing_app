@@ -2,7 +2,9 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import '../app_settings.dart';
+import '../app_strings.dart';
 import '../time_format.dart';
+import '../widgets/circular_timer_display.dart';
 
 enum _Phase { round, pause }
 
@@ -13,13 +15,23 @@ class IntervalTimerTab extends StatefulWidget {
   State<IntervalTimerTab> createState() => _IntervalTimerTabState();
 }
 
-class _IntervalTimerTabState extends State<IntervalTimerTab> {
+class _IntervalTimerTabState extends State<IntervalTimerTab>
+    with SingleTickerProviderStateMixin {
   final _roundsController = TextEditingController(text: '3');
   final _roundMinutesController = TextEditingController(text: '3');
   final _roundSecondsController = TextEditingController(text: '00');
   final _pauseMinutesController = TextEditingController(text: '1');
   final _pauseSecondsController = TextEditingController(text: '00');
   final _audioPlayer = AudioPlayer();
+
+  late final AnimationController _ringController = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 1),
+  );
+  late final Animation<double> _ringProgress = Tween<double>(
+    begin: 1,
+    end: 0,
+  ).animate(_ringController);
 
   Timer? _timer;
   int _totalRounds = 3;
@@ -55,12 +67,17 @@ class _IntervalTimerTabState extends State<IntervalTimerTab> {
       _currentRound = 1;
       _phase = _Phase.round;
       _remainingSeconds = roundDuration;
+      _ringController
+        ..duration = Duration(seconds: roundDuration)
+        ..value = 0;
     }
 
     setState(() {
       _isRunning = true;
       _hasStarted = true;
     });
+
+    _ringController.forward();
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_remainingSeconds <= 1) {
@@ -74,6 +91,7 @@ class _IntervalTimerTabState extends State<IntervalTimerTab> {
   void _advancePhase(Timer timer) {
     if (_phase == _Phase.round && _currentRound >= _totalRounds) {
       timer.cancel();
+      _ringController.stop();
       setState(() {
         _remainingSeconds = 0;
         _isRunning = false;
@@ -85,13 +103,16 @@ class _IntervalTimerTabState extends State<IntervalTimerTab> {
 
     _playAlert();
 
+    final int nextPhaseDuration;
     if (_phase == _Phase.round) {
       if (_pauseDuration > 0) {
+        nextPhaseDuration = _pauseDuration;
         setState(() {
           _phase = _Phase.pause;
           _remainingSeconds = _pauseDuration;
         });
       } else {
+        nextPhaseDuration = _roundDuration;
         setState(() {
           _currentRound++;
           _phase = _Phase.round;
@@ -99,21 +120,31 @@ class _IntervalTimerTabState extends State<IntervalTimerTab> {
         });
       }
     } else {
+      nextPhaseDuration = _roundDuration;
       setState(() {
         _currentRound++;
         _phase = _Phase.round;
         _remainingSeconds = _roundDuration;
       });
     }
+
+    _ringController
+      ..duration = Duration(seconds: nextPhaseDuration)
+      ..value = 0
+      ..forward();
   }
 
   void _pause() {
     _timer?.cancel();
+    _ringController.stop();
     setState(() => _isRunning = false);
   }
 
   void _reset() {
     _timer?.cancel();
+    _ringController
+      ..stop()
+      ..value = 0;
     setState(() {
       _isRunning = false;
       _hasStarted = false;
@@ -132,6 +163,7 @@ class _IntervalTimerTabState extends State<IntervalTimerTab> {
   @override
   void dispose() {
     _timer?.cancel();
+    _ringController.dispose();
     _roundsController.dispose();
     _roundMinutesController.dispose();
     _roundSecondsController.dispose();
@@ -141,11 +173,10 @@ class _IntervalTimerTabState extends State<IntervalTimerTab> {
     super.dispose();
   }
 
-  static const _timeFontSize = 64.0;
   static const _timeFontWeight = FontWeight.bold;
   static const _timeFontFeatures = [FontFeature.tabularFigures()];
 
-  Widget _buildSettingsInput(BuildContext context) {
+  Widget _buildSettingsInput(BuildContext context, AppStrings s) {
     final color = Theme.of(context).colorScheme.primary;
     final labelStyle = TextStyle(fontSize: 14, color: Colors.grey.shade400);
     final fieldStyle = TextStyle(fontSize: 28, fontWeight: FontWeight.w600, color: color);
@@ -165,11 +196,11 @@ class _IntervalTimerTabState extends State<IntervalTimerTab> {
 
     return Column(
       children: [
-        Text('Runden', style: labelStyle),
+        Text(s('rounds'), style: labelStyle),
         const SizedBox(height: 4),
         numberField(_roundsController, 70),
         const SizedBox(height: 24),
-        Text('Rundendauer', style: labelStyle),
+        Text(s('roundDuration'), style: labelStyle),
         const SizedBox(height: 4),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -180,7 +211,7 @@ class _IntervalTimerTabState extends State<IntervalTimerTab> {
           ],
         ),
         const SizedBox(height: 24),
-        Text('Pause', style: labelStyle),
+        Text(s('pause'), style: labelStyle),
         const SizedBox(height: 4),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -197,49 +228,64 @@ class _IntervalTimerTabState extends State<IntervalTimerTab> {
   @override
   Widget build(BuildContext context) {
     final isPause = _phase == _Phase.pause;
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (_canEditSettings)
-            _buildSettingsInput(context)
-          else ...[
-            Text(
-              _isFinished ? 'Training beendet' : (isPause ? 'Pause' : 'Runde $_currentRound / $_totalRounds'),
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: isPause ? Colors.blueAccent : Theme.of(context).colorScheme.primary,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              formatSeconds(_remainingSeconds),
-              style: TextStyle(
-                fontSize: _timeFontSize,
-                fontWeight: _timeFontWeight,
-                fontFeatures: _timeFontFeatures,
-                color: _isFinished ? Colors.red : null,
-              ),
-            ),
-          ],
-          const SizedBox(height: 40),
-          Row(
+    return ValueListenableBuilder<Locale>(
+      valueListenable: AppSettings.locale,
+      builder: (context, locale, _) {
+        final s = AppStrings.of(locale);
+        final numberColor = _isFinished
+            ? Colors.red
+            : (isPause ? Colors.blueAccent : Theme.of(context).colorScheme.primary);
+        return Center(
+          child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              ElevatedButton(
-                onPressed: _isFinished ? null : (_isRunning ? _pause : _start),
-                child: Text(_isRunning ? 'Pause' : 'Start'),
-              ),
-              const SizedBox(width: 16),
-              OutlinedButton(
-                onPressed: _reset,
-                child: const Text('Reset'),
+              if (_canEditSettings)
+                _buildSettingsInput(context, s)
+              else ...[
+                Text(
+                  _isFinished
+                      ? s('trainingDone')
+                      : (isPause ? s('pause') : '${s('round')} $_currentRound / $_totalRounds'),
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: isPause ? Colors.blueAccent : Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                CircularTimerDisplay(
+                  progress: _ringProgress,
+                  color: numberColor,
+                  child: Text(
+                    formatSeconds(_remainingSeconds),
+                    style: TextStyle(
+                      fontSize: 56,
+                      fontWeight: _timeFontWeight,
+                      fontFeatures: _timeFontFeatures,
+                      color: numberColor,
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 40),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: _isFinished ? null : (_isRunning ? _pause : _start),
+                    child: Text(_isRunning ? s('pause') : s('start')),
+                  ),
+                  const SizedBox(width: 16),
+                  OutlinedButton(
+                    onPressed: _reset,
+                    child: Text(s('reset')),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

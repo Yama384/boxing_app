@@ -9,4 +9,5 @@ class AppSettings {
 
   static final ValueNotifier<Color> seedColor = ValueNotifier<Color>(Colors.redAccent);
   static final ValueNotifier<bool> soundEnabled = ValueNotifier<bool>(true);
+  static final ValueNotifier<Locale> locale = ValueNotifier<Locale>(const Locale('de'));
 }

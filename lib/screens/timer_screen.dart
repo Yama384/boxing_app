@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart' show CupertinoSlidingSegmentedControl;
 import 'package:flutter/material.dart';
+import '../app_settings.dart';
+import '../app_strings.dart';
 import 'interval_timer_tab.dart';
 import 'simple_timer_tab.dart';
 import 'stopwatch_tab.dart';
@@ -39,31 +41,37 @@ class _TimerScreenState extends State<TimerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Timer')),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(child: _buildBody()),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              child: CupertinoSlidingSegmentedControl<_TimerMode>(
-                groupValue: _mode,
-                backgroundColor: const Color(0xFF1C1C1E),
-                thumbColor: Theme.of(context).colorScheme.primary,
-                children: {
-                  _TimerMode.stopwatch: _segmentLabel('Stoppuhr'),
-                  _TimerMode.simple: _segmentLabel('Timer'),
-                  _TimerMode.interval: _segmentLabel('Intervalle'),
-                },
-                onValueChanged: (value) {
-                  if (value != null) setState(() => _mode = value);
-                },
-              ),
+    return ValueListenableBuilder<Locale>(
+      valueListenable: AppSettings.locale,
+      builder: (context, locale, _) {
+        final s = AppStrings.of(locale);
+        return Scaffold(
+          appBar: AppBar(title: Text(s('timer'))),
+          body: SafeArea(
+            child: Column(
+              children: [
+                Expanded(child: _buildBody()),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  child: CupertinoSlidingSegmentedControl<_TimerMode>(
+                    groupValue: _mode,
+                    backgroundColor: const Color(0xFF1C1C1E),
+                    thumbColor: Theme.of(context).colorScheme.primary,
+                    children: {
+                      _TimerMode.stopwatch: _segmentLabel(s('stopwatch')),
+                      _TimerMode.simple: _segmentLabel(s('timer')),
+                      _TimerMode.interval: _segmentLabel(s('interval')),
+                    },
+                    onValueChanged: (value) {
+                      if (value != null) setState(() => _mode = value);
+                    },
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

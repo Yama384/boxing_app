@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../app_settings.dart';
+import '../app_strings.dart';
 import 'coming_soon_screen.dart';
 import 'settings_screen.dart';
 import 'timer_screen.dart';
@@ -8,96 +10,102 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 16),
-              Text(
-                'BOXING APP',
-                style: TextStyle(
-                  fontSize: 34,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.5,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Train. Track. Win.',
-                style: TextStyle(
-                  fontSize: 14,
-                  letterSpacing: 2,
-                  color: Colors.grey.shade500,
-                ),
-              ),
-              const SizedBox(height: 32),
-              Expanded(
-                child: GridView.count(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                  children: [
-                    _ModuleCard(
-                      icon: Icons.timer,
-                      label: 'Timer',
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const TimerScreen()),
-                      ),
+    return ValueListenableBuilder<Locale>(
+      valueListenable: AppSettings.locale,
+      builder: (context, locale, _) {
+        final s = AppStrings.of(locale);
+        return Scaffold(
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 16),
+                  Text(
+                    s('appTitle').toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 34,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.5,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
-                    _ModuleCard(
-                      icon: Icons.fitness_center,
-                      label: 'Kraftübungen',
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const ComingSoonScreen(
-                            title: 'Kraftübungen',
-                            icon: Icons.fitness_center,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    s('tagline'),
+                    style: TextStyle(
+                      fontSize: 14,
+                      letterSpacing: 2,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  Expanded(
+                    child: GridView.count(
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 16,
+                      crossAxisSpacing: 16,
+                      children: [
+                        _ModuleCard(
+                          icon: Icons.timer,
+                          label: s('timer'),
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const TimerScreen()),
                           ),
                         ),
-                      ),
-                    ),
-                    _ModuleCard(
-                      icon: Icons.event_note,
-                      label: 'Trainingsplan',
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const ComingSoonScreen(
-                            title: 'Trainingsplan',
-                            icon: Icons.event_note,
+                        _ModuleCard(
+                          icon: Icons.fitness_center,
+                          label: s('strength'),
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const ComingSoonScreen(
+                                titleKey: 'strength',
+                                icon: Icons.fitness_center,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                    _ModuleCard(
-                      icon: Icons.menu_book,
-                      label: 'Logbuch',
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const ComingSoonScreen(
-                            title: 'Logbuch',
-                            icon: Icons.menu_book,
+                        _ModuleCard(
+                          icon: Icons.event_note,
+                          label: s('trainingPlan'),
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const ComingSoonScreen(
+                                titleKey: 'trainingPlan',
+                                icon: Icons.event_note,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                        _ModuleCard(
+                          icon: Icons.menu_book,
+                          label: s('logbook'),
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const ComingSoonScreen(
+                                titleKey: 'logbook',
+                                icon: Icons.menu_book,
+                              ),
+                            ),
+                          ),
+                        ),
+                        _ModuleCard(
+                          icon: Icons.settings,
+                          label: s('settings'),
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                          ),
+                        ),
+                      ],
                     ),
-                    _ModuleCard(
-                      icon: Icons.settings,
-                      label: 'Einstellungen',
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
