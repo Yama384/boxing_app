@@ -112,7 +112,7 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
   Widget _buildTimeInput(BuildContext context) {
     final editableColor = Theme.of(context).colorScheme.primary;
     final editStyle = TextStyle(
-      fontSize: 40,
+      fontSize: 56,
       fontWeight: _timeFontWeight,
       fontFeatures: _timeFontFeatures,
       color: editableColor,
@@ -122,7 +122,7 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         SizedBox(
-          width: 58,
+          width: 70,
           child: TextField(
             controller: _minutesController,
             keyboardType: TextInputType.number,
@@ -130,6 +130,7 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
             style: editStyle,
             decoration: const InputDecoration(
               isDense: true,
+              contentPadding: EdgeInsets.only(bottom: 2),
               border: UnderlineInputBorder(),
             ),
           ),
@@ -139,7 +140,7 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
           child: Text(':', style: editStyle),
         ),
         SizedBox(
-          width: 58,
+          width: 70,
           child: TextField(
             controller: _secondsController,
             keyboardType: TextInputType.number,
@@ -147,6 +148,7 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
             style: editStyle,
             decoration: const InputDecoration(
               isDense: true,
+              contentPadding: EdgeInsets.only(bottom: 2),
               border: UnderlineInputBorder(),
             ),
           ),

@@ -32,6 +32,12 @@ class CircularTimerDisplay extends StatelessWidget {
       duration: const Duration(milliseconds: 500),
       curve: Curves.easeOutBack,
       builder: (context, appear, ring) {
+        // Sobald die Einblend-Animation fertig ist (appear >= 1), den Ring
+        // ohne jede Opacity-/Transform-Ebene zurückgeben -- eine dauerhaft
+        // bestehende Transform-Ebene (selbst bei Skalierung 1.0) kann beim
+        // ständigen Neuzeichnen des Rings leicht unsaubere Kanten
+        // verursachen.
+        if (appear >= 1.0) return ring!;
         return Opacity(
           opacity: appear.clamp(0.0, 1.0),
           child: Transform.scale(scale: appear, child: ring),
