@@ -24,14 +24,8 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
   final _pauseSecondsController = TextEditingController(text: '00');
   final _audioPlayer = AudioPlayer();
 
-  late final AnimationController _ringController = AnimationController(
-    vsync: this,
-    duration: const Duration(seconds: 1),
-  );
-  late final Animation<double> _ringProgress = Tween<double>(
-    begin: 1,
-    end: 0,
-  ).animate(_ringController);
+  late final AnimationController _ringController;
+  late final Animation<double> _ringProgress;
 
   Timer? _timer;
   int _totalRounds = 3;
@@ -47,6 +41,16 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
   bool _isFinished = false;
 
   bool get _canEditSettings => !_isRunning && !_hasStarted;
+
+  @override
+  void initState() {
+    super.initState();
+    _ringController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    );
+    _ringProgress = Tween<double>(begin: 1, end: 0).animate(_ringController);
+  }
 
   void _start() {
     if (_isRunning) return;
