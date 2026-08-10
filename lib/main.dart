@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'app_settings.dart';
+import 'logbook_data.dart';
 import 'screens/home_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await LogbookData.load();
   runApp(const MyApp());
 }
 

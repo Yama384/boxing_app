@@ -38,6 +38,7 @@ dependencies:
   # Spielt Audiodateien ab (z.B. den Boxglocken-Sound beim Timer-Ende)
   audioplayers: ^6.1.0
   fl_chart: ^1.2.0
+  shared_preferences: ^2.5.3
 
 dev_dependencies:
   flutter_test:

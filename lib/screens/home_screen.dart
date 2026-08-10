@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../app_settings.dart';
 import '../app_strings.dart';
-import 'coming_soon_screen.dart';
+import 'logbook_screen.dart';
 import 'settings_screen.dart';
 import 'strength_screen.dart';
 import 'timer_screen.dart';
@@ -78,12 +78,7 @@ class HomeScreen extends StatelessWidget {
                           icon: Icons.menu_book,
                           label: s('logbook'),
                           onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const ComingSoonScreen(
-                                titleKey: 'logbook',
-                                icon: Icons.menu_book,
-                              ),
-                            ),
+                            MaterialPageRoute(builder: (_) => const LogbookScreen()),
                           ),
                         ),
                         _ModuleCard(
