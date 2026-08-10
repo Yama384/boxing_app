@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../app_settings.dart';
 import '../app_strings.dart';
+import '../max_value_text_input_formatter.dart';
 import '../time_format.dart';
 import '../widgets/circular_timer_display.dart';
 
@@ -179,13 +181,18 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
 
   static const _timeFontWeight = FontWeight.bold;
   static const _timeFontFeatures = [FontFeature.tabularFigures()];
+  // Ohne festen height/strutStyle sitzen die Ziffern durch die
+  // Schrift-Metrik (Ascent/Descent) nicht exakt in der Zeilenmitte und
+  // wirken dadurch im Kreis nach oben verschoben.
+  static const _timeFontHeight = 1.0;
+  static const _timeStrutStyle = StrutStyle(fontSize: 56, height: 1, forceStrutHeight: true);
 
   Widget _buildSettingsInput(BuildContext context, AppStrings s) {
     final color = Theme.of(context).colorScheme.primary;
     final labelStyle = TextStyle(fontSize: 14, color: Colors.grey.shade400);
     final fieldStyle = TextStyle(fontSize: 28, fontWeight: FontWeight.w600, color: color);
 
-    Widget numberField(TextEditingController controller, double width) {
+    Widget numberField(TextEditingController controller, double width, {int? maxValue}) {
       return SizedBox(
         width: width,
         child: TextField(
@@ -193,6 +200,11 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
           keyboardType: TextInputType.number,
           textAlign: TextAlign.center,
           style: fieldStyle,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(2),
+            if (maxValue != null) MaxValueTextInputFormatter(maxValue),
+          ],
           decoration: const InputDecoration(isDense: true, border: UnderlineInputBorder()),
         ),
       );
@@ -211,7 +223,7 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
           children: [
             numberField(_roundMinutesController, 70),
             Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: Text(':', style: fieldStyle)),
-            numberField(_roundSecondsController, 70),
+            numberField(_roundSecondsController, 70, maxValue: 59),
           ],
         ),
         const SizedBox(height: 24),
@@ -222,7 +234,7 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
           children: [
             numberField(_pauseMinutesController, 70),
             Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: Text(':', style: fieldStyle)),
-            numberField(_pauseSecondsController, 70),
+            numberField(_pauseSecondsController, 70, maxValue: 59),
           ],
         ),
       ],
@@ -262,8 +274,11 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
                   color: numberColor,
                   child: Text(
                     formatSeconds(_remainingSeconds),
+                    textAlign: TextAlign.center,
+                    strutStyle: _timeStrutStyle,
                     style: TextStyle(
                       fontSize: 56,
+                      height: _timeFontHeight,
                       fontWeight: _timeFontWeight,
                       fontFeatures: _timeFontFeatures,
                       color: numberColor,

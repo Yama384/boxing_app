@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../app_settings.dart';
 import '../app_strings.dart';
+import '../max_value_text_input_formatter.dart';
 import '../time_format.dart';
 import '../widgets/circular_timer_display.dart';
 
@@ -108,6 +110,11 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
 
   static const _timeFontWeight = FontWeight.bold;
   static const _timeFontFeatures = [FontFeature.tabularFigures()];
+  // Ohne festen height/strutStyle sitzen die Ziffern durch die
+  // Schrift-Metrik (Ascent/Descent) nicht exakt in der Zeilenmitte und
+  // wirken dadurch im Kreis nach oben verschoben.
+  static const _timeFontHeight = 1.0;
+  static const _timeStrutStyle = StrutStyle(fontSize: 56, height: 1, forceStrutHeight: true);
 
   Widget _buildTimeInput(BuildContext context) {
     final editableColor = Theme.of(context).colorScheme.primary;
@@ -128,6 +135,10 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
             keyboardType: TextInputType.number,
             textAlign: TextAlign.center,
             style: editStyle,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(2),
+            ],
             decoration: const InputDecoration(
               isDense: true,
               contentPadding: EdgeInsets.only(bottom: 2),
@@ -146,6 +157,11 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
             keyboardType: TextInputType.number,
             textAlign: TextAlign.center,
             style: editStyle,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(2),
+              const MaxValueTextInputFormatter(59),
+            ],
             decoration: const InputDecoration(
               isDense: true,
               contentPadding: EdgeInsets.only(bottom: 2),
@@ -175,8 +191,11 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
                     ? _buildTimeInput(context)
                     : Text(
                         formatSeconds(_remainingSeconds),
+                        textAlign: TextAlign.center,
+                        strutStyle: _timeStrutStyle,
                         style: TextStyle(
                           fontSize: 56,
+                          height: _timeFontHeight,
                           fontWeight: _timeFontWeight,
                           fontFeatures: _timeFontFeatures,
                           color: numberColor,
