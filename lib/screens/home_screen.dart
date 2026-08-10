@@ -5,6 +5,7 @@ import 'coming_soon_screen.dart';
 import 'settings_screen.dart';
 import 'strength_screen.dart';
 import 'timer_screen.dart';
+import 'training_plan_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -69,10 +70,7 @@ class HomeScreen extends StatelessWidget {
                           label: s('trainingPlan'),
                           onTap: () => Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (_) => const ComingSoonScreen(
-                                titleKey: 'trainingPlan',
-                                icon: Icons.event_note,
-                              ),
+                              builder: (_) => const TrainingPlanScreen(),
                             ),
                           ),
                         ),
