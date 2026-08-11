@@ -134,7 +134,10 @@ class _LogbookHistoryTabState extends State<LogbookHistoryTab> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(widget.s('entryDeleted')),
-        action: SnackBarAction(label: widget.s('undo'), onPressed: () => LogbookData.restoreEntry(entry)),
+        action: SnackBarAction(
+          label: widget.s('undo'),
+          onPressed: () => LogbookData.restoreEntry(entry),
+        ),
       ),
     );
   }
@@ -157,10 +160,11 @@ class _LogbookHistoryTabState extends State<LogbookHistoryTab> {
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF1C1C1E),
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) {
         return SafeArea(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -170,14 +174,22 @@ class _LogbookHistoryTabState extends State<LogbookHistoryTab> {
                   children: [
                     Text(_typeEmoji(entry.trainingType), style: const TextStyle(fontSize: 22)),
                     const SizedBox(width: 8),
-                    Text(
-                      widget.s(_typeLabelKeys[entry.trainingType]!),
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
+                    Expanded(
+                      child: Text(
+                        widget.s(_typeLabelKeys[entry.trainingType]!),
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
+                      ),
                     ),
-                    const Spacer(),
                     Text(_fmtDate(entry.date), style: TextStyle(color: Colors.grey.shade500)),
                   ],
                 ),
+                if (entry.durationMinutes != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    '${entry.durationMinutes} ${widget.s('minutesUnit')}',
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+                  ),
+                ],
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -195,6 +207,7 @@ class _LogbookHistoryTabState extends State<LogbookHistoryTab> {
                     ],
                   ],
                 ),
+                if (entry.goal.isNotEmpty) _detailBlock(widget.s('trainingGoalLabel'), entry.goal),
                 if (entry.whatWentWell.isNotEmpty)
                   _detailBlock(widget.s('whatWentWellLabel'), entry.whatWentWell),
                 if (entry.whatWentBad.isNotEmpty)
@@ -370,6 +383,15 @@ class _LogbookHistoryTabState extends State<LogbookHistoryTab> {
                   Text(_fmtDate(entry.date), style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
                 ],
               ),
+              if (entry.goal.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  '${widget.s('trainingGoalLabel')}: ${entry.goal}',
+                  style: TextStyle(fontSize: 13, color: Colors.grey.shade300),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
               const SizedBox(height: 8),
               Row(
                 children: [

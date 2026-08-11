@@ -10,9 +10,21 @@ import 'create_goal_screen.dart';
 import 'goal_detail_screen.dart';
 
 class LogbookDashboardTab extends StatelessWidget {
-  const LogbookDashboardTab({super.key, required this.s});
+  const LogbookDashboardTab({
+    super.key,
+    required this.s,
+    this.streakKey,
+    this.focusKey,
+    this.goalsKey,
+  });
 
   final AppStrings s;
+
+  /// Anker für die Logbuch-Guide-Tour (siehe logbook_screen.dart) -- optional,
+  /// damit dieses Widget auch ohne Tour-Anbindung nutzbar bleibt.
+  final GlobalKey? streakKey;
+  final GlobalKey? focusKey;
+  final GlobalKey? goalsKey;
 
   Widget _statTile(int value, String label) {
     return Container(
@@ -48,7 +60,10 @@ class LogbookDashboardTab extends StatelessWidget {
   Widget _buildStatsGrid(BuildContext context, int entryCount, int activeGoals, int completedGoals) {
     return Column(
       children: [
-        _buildStreakHero(context, LogbookData.currentStreak),
+        KeyedSubtree(
+          key: streakKey,
+          child: _buildStreakHero(context, LogbookData.currentStreak),
+        ),
         const SizedBox(height: 12),
         Row(
           children: [
@@ -151,6 +166,41 @@ class LogbookDashboardTab extends StatelessWidget {
     );
   }
 
+  /// Pausierte/abgeschlossene Ziele verschwinden sonst nach dem Pausieren
+  /// spurlos aus der UI -- ohne diese Sektion gibt es keinen Weg mehr zurück
+  /// zum GoalDetailScreen (fortsetzen/löschen/bearbeiten).
+  Widget _buildOtherGoalsSection(BuildContext context, List<ImprovementGoal> otherGoals) {
+    if (otherGoals.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 24),
+        Text(
+          s('otherGoals'),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white),
+        ),
+        const SizedBox(height: 12),
+        for (final goal in otherGoals)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: FadeSlideIn(
+              key: ValueKey(goal.id),
+              child: Opacity(
+                opacity: 0.7,
+                child: GoalProgressCard(
+                  goal: goal,
+                  s: s,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => GoalDetailScreen(goal: goal)),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
@@ -190,6 +240,8 @@ class LogbookDashboardTab extends StatelessWidget {
             }
             final activeGoals = goals.where((g) => g.status == GoalStatus.active).toList()
               ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+            final otherGoals = goals.where((g) => g.status != GoalStatus.active).toList()
+              ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
             final completedGoals = goals.where((g) => g.status == GoalStatus.completed).length;
 
             return ListView(
@@ -197,9 +249,16 @@ class LogbookDashboardTab extends StatelessWidget {
               children: [
                 _buildStatsGrid(context, entries.length, activeGoals.length, completedGoals),
                 const SizedBox(height: 24),
-                _buildFocusSection(context, LogbookData.focusGoal),
+                KeyedSubtree(
+                  key: focusKey,
+                  child: _buildFocusSection(context, LogbookData.focusGoal),
+                ),
                 const SizedBox(height: 24),
-                _buildGoalsSection(context, activeGoals),
+                KeyedSubtree(
+                  key: goalsKey,
+                  child: _buildGoalsSection(context, activeGoals),
+                ),
+                _buildOtherGoalsSection(context, otherGoals),
               ],
             );
           },

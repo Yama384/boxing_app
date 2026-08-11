@@ -3,6 +3,7 @@ import '../app_settings.dart';
 import '../app_strings.dart';
 import '../models/training_session.dart';
 import '../training_plan_data.dart';
+import '../widgets/coach_bubble.dart';
 
 const _categoryColors = <String, Color>{
   'categoryStrength': Colors.orangeAccent,
@@ -25,14 +26,21 @@ Color _colorForSession(TrainingSession session) {
   final key = session.categoryKey;
   if (key != null) return _categoryColors[key] ?? Colors.grey;
   final name = session.customCategory!;
-  final index = name.codeUnits.fold<int>(0, (sum, c) => sum + c) % _customCategoryColors.length;
+  final index =
+      name.codeUnits.fold<int>(0, (sum, c) => sum + c) %
+      _customCategoryColors.length;
   return _customCategoryColors[index];
 }
 
 class TrainingPlanScreen extends StatelessWidget {
   const TrainingPlanScreen({super.key});
 
-  void _deleteSession(BuildContext context, AppStrings s, Weekday day, TrainingSession session) {
+  void _deleteSession(
+    BuildContext context,
+    AppStrings s,
+    Weekday day,
+    TrainingSession session,
+  ) {
     TrainingPlanData.removeSession(day, session);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -45,7 +53,11 @@ class TrainingPlanScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _showAddSessionDialog(BuildContext context, AppStrings s, Weekday day) async {
+  Future<void> _showAddSessionDialog(
+    BuildContext context,
+    AppStrings s,
+    Weekday day,
+  ) async {
     final customController = TextEditingController();
     String? selectedKey;
 
@@ -54,7 +66,8 @@ class TrainingPlanScreen extends StatelessWidget {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (dialogContext, setDialogState) {
-            final canAdd = selectedKey != null || customController.text.trim().isNotEmpty;
+            final canAdd =
+                selectedKey != null || customController.text.trim().isNotEmpty;
             return AlertDialog(
               title: Text(s('addSession')),
               content: SingleChildScrollView(
@@ -80,7 +93,9 @@ class TrainingPlanScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                     TextField(
                       controller: customController,
-                      decoration: InputDecoration(labelText: s('customCategoryLabel')),
+                      decoration: InputDecoration(
+                        labelText: s('customCategoryLabel'),
+                      ),
                       onChanged: (value) => setDialogState(() {
                         if (value.trim().isNotEmpty) selectedKey = null;
                       }),
@@ -97,10 +112,12 @@ class TrainingPlanScreen extends StatelessWidget {
                   onPressed: !canAdd
                       ? null
                       : () => Navigator.of(dialogContext).pop(
-                            selectedKey != null
-                                ? TrainingSession(categoryKey: selectedKey)
-                                : TrainingSession(customCategory: customController.text.trim()),
-                          ),
+                          selectedKey != null
+                              ? TrainingSession(categoryKey: selectedKey)
+                              : TrainingSession(
+                                  customCategory: customController.text.trim(),
+                                ),
+                        ),
                   child: Text(s('add')),
                 ),
               ],
@@ -115,7 +132,12 @@ class TrainingPlanScreen extends StatelessWidget {
     }
   }
 
-  Widget _sessionCard(BuildContext context, AppStrings s, Weekday day, TrainingSession session) {
+  Widget _sessionCard(
+    BuildContext context,
+    AppStrings s,
+    Weekday day,
+    TrainingSession session,
+  ) {
     final color = _colorForSession(session);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -135,7 +157,11 @@ class TrainingPlanScreen extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             session.displayCategory(s),
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+            ),
           ),
           const SizedBox(width: 6),
           GestureDetector(
@@ -147,7 +173,12 @@ class TrainingPlanScreen extends StatelessWidget {
     );
   }
 
-  Widget _dayCard(BuildContext context, AppStrings s, Weekday day, List<TrainingSession> sessions) {
+  Widget _dayCard(
+    BuildContext context,
+    AppStrings s,
+    Weekday day,
+    List<TrainingSession> sessions,
+  ) {
     final primary = Theme.of(context).colorScheme.primary;
     return Container(
       width: double.infinity,
@@ -184,13 +215,20 @@ class TrainingPlanScreen extends StatelessWidget {
           if (sessions.isEmpty)
             Text(
               s('noSessionsPlanned'),
-              style: TextStyle(color: Colors.grey.shade500, fontStyle: FontStyle.italic, fontSize: 13),
+              style: TextStyle(
+                color: Colors.grey.shade500,
+                fontStyle: FontStyle.italic,
+                fontSize: 13,
+              ),
             )
           else
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: [for (final session in sessions) _sessionCard(context, s, day, session)],
+              children: [
+                for (final session in sessions)
+                  _sessionCard(context, s, day, session),
+              ],
             ),
         ],
       ),
@@ -205,16 +243,33 @@ class TrainingPlanScreen extends StatelessWidget {
         final s = AppStrings.of(locale);
         return Scaffold(
           appBar: AppBar(title: Text(s('trainingPlan'))),
-          body: ValueListenableBuilder<Map<Weekday, List<TrainingSession>>>(
-            valueListenable: TrainingPlanData.week,
-            builder: (context, week, _) {
-              return ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  for (final day in Weekday.values) _dayCard(context, s, day, week[day]!),
-                ],
-              );
-            },
+          // Coach-Guide als Body-Overlay (nicht AppBar-Actions) -- die AppBar
+          // schneidet überlaufende Kind-Inhalte ab, siehe logbook_screen.dart.
+          body: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              ValueListenableBuilder<Map<Weekday, List<TrainingSession>>>(
+                valueListenable: TrainingPlanData.week,
+                builder: (context, week, _) {
+                  return ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      for (final day in Weekday.values)
+                        _dayCard(context, s, day, week[day]!),
+                    ],
+                  );
+                },
+              ),
+              Positioned(
+                top: 10,
+                right: 20,
+                child: CoachBubble(
+                  introId: 'training_plan_intro',
+                  side: CoachBubbleSide.right,
+                  messages: [s('coachPlanIntro1'), s('coachPlanIntro2'), s('coachPlanIntro3')],
+                ),
+              ),
+            ],
           ),
         );
       },

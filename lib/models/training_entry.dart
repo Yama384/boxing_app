@@ -1,3 +1,7 @@
+import '../app_strings.dart';
+import 'pain_entry.dart';
+import 'sparring_log.dart';
+
 enum TrainingType {
   technique,
   sparring,
@@ -14,6 +18,28 @@ enum TrainingIntensity { light, medium, hard, veryHard }
 
 enum Mood { frustrated, neutral, good, motivated, onFire }
 
+/// Feinere Einordnung der Einheit als [TrainingType] (der primär die
+/// Disziplin beschreibt) -- steuert im Formular, welche Schritte/Felder
+/// überhaupt angezeigt werden (z.B. kein Sparring-Log bei S&C-Sessions).
+enum SessionType { techniqueDrilling, sparring, competitionPrep, strengthConditioning, openMat, seminar }
+
+String sessionTypeLabel(SessionType type, AppStrings s) {
+  switch (type) {
+    case SessionType.techniqueDrilling:
+      return s('sessionTypeTechniqueDrilling');
+    case SessionType.sparring:
+      return s('sessionTypeSparring');
+    case SessionType.competitionPrep:
+      return s('sessionTypeCompetitionPrep');
+    case SessionType.strengthConditioning:
+      return s('sessionTypeStrengthConditioning');
+    case SessionType.openMat:
+      return s('sessionTypeOpenMat');
+    case SessionType.seminar:
+      return s('sessionTypeSeminar');
+  }
+}
+
 class TrainingEntry {
   const TrainingEntry({
     required this.id,
@@ -22,11 +48,25 @@ class TrainingEntry {
     required this.intensity,
     required this.rating,
     this.mood,
+    this.goal = '',
+    this.durationMinutes,
     this.whatWentWell = '',
     this.whatWentBad = '',
     this.improvement = '',
     required this.createdAt,
     required this.updatedAt,
+    this.sessionType,
+    this.additionalSports = const [],
+    this.rpe,
+    this.energyLevelPre,
+    this.focusLevelPre,
+    this.sleepQuality,
+    this.painEntries = const [],
+    this.techniquesPracticed = const [],
+    this.positionalFocus = const [],
+    this.techniqueSuccessRating,
+    this.sparringLog,
+    this.keyTakeaway,
   });
 
   final String id;
@@ -35,11 +75,38 @@ class TrainingEntry {
   final TrainingIntensity intensity;
   final int rating;
   final Mood? mood;
+
+  /// Trainingsziel für diese Einheit (z.B. "Jab verbessern") -- getrennt von
+  /// den langfristigen ImprovementGoal-Objekten.
+  final String goal;
+  final int? durationMinutes;
   final String whatWentWell;
   final String whatWentBad;
   final String improvement;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  /// Session-Typ laut Kampfsport-Logbuch-Datenmodell -- optional, ältere
+  /// Einträge haben hier `null` und werden im Formular wie "alle Schritte
+  /// anzeigen" behandelt.
+  final SessionType? sessionType;
+
+  /// Sportarten zusätzlich zu [trainingType], z.B. bei Cross-Training-
+  /// Sessions (Hauptsportart MMA, zusätzlich BJJ und Wrestling geübt).
+  final List<String> additionalSports;
+
+  final int? rpe;
+  final int? energyLevelPre;
+  final int? focusLevelPre;
+  final int? sleepQuality;
+  final List<PainEntry> painEntries;
+  final List<String> techniquesPracticed;
+  final List<String> positionalFocus;
+  final int? techniqueSuccessRating;
+  final SparringLog? sparringLog;
+
+  /// Kurzer "Aha-Moment" des Tages, ein Satz.
+  final String? keyTakeaway;
 
   TrainingEntry copyWith({
     DateTime? date,
@@ -47,10 +114,24 @@ class TrainingEntry {
     TrainingIntensity? intensity,
     int? rating,
     Mood? mood,
+    String? goal,
+    int? durationMinutes,
     String? whatWentWell,
     String? whatWentBad,
     String? improvement,
     DateTime? updatedAt,
+    SessionType? sessionType,
+    List<String>? additionalSports,
+    int? rpe,
+    int? energyLevelPre,
+    int? focusLevelPre,
+    int? sleepQuality,
+    List<PainEntry>? painEntries,
+    List<String>? techniquesPracticed,
+    List<String>? positionalFocus,
+    int? techniqueSuccessRating,
+    SparringLog? sparringLog,
+    String? keyTakeaway,
   }) {
     return TrainingEntry(
       id: id,
@@ -59,11 +140,25 @@ class TrainingEntry {
       intensity: intensity ?? this.intensity,
       rating: rating ?? this.rating,
       mood: mood ?? this.mood,
+      goal: goal ?? this.goal,
+      durationMinutes: durationMinutes ?? this.durationMinutes,
       whatWentWell: whatWentWell ?? this.whatWentWell,
       whatWentBad: whatWentBad ?? this.whatWentBad,
       improvement: improvement ?? this.improvement,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      sessionType: sessionType ?? this.sessionType,
+      additionalSports: additionalSports ?? this.additionalSports,
+      rpe: rpe ?? this.rpe,
+      energyLevelPre: energyLevelPre ?? this.energyLevelPre,
+      focusLevelPre: focusLevelPre ?? this.focusLevelPre,
+      sleepQuality: sleepQuality ?? this.sleepQuality,
+      painEntries: painEntries ?? this.painEntries,
+      techniquesPracticed: techniquesPracticed ?? this.techniquesPracticed,
+      positionalFocus: positionalFocus ?? this.positionalFocus,
+      techniqueSuccessRating: techniqueSuccessRating ?? this.techniqueSuccessRating,
+      sparringLog: sparringLog ?? this.sparringLog,
+      keyTakeaway: keyTakeaway ?? this.keyTakeaway,
     );
   }
 
@@ -74,11 +169,25 @@ class TrainingEntry {
         'intensity': intensity.name,
         'rating': rating,
         'mood': mood?.name,
+        'goal': goal,
+        'durationMinutes': durationMinutes,
         'whatWentWell': whatWentWell,
         'whatWentBad': whatWentBad,
         'improvement': improvement,
         'createdAt': createdAt.toIso8601String(),
         'updatedAt': updatedAt.toIso8601String(),
+        'sessionType': sessionType?.name,
+        'additionalSports': additionalSports,
+        'rpe': rpe,
+        'energyLevelPre': energyLevelPre,
+        'focusLevelPre': focusLevelPre,
+        'sleepQuality': sleepQuality,
+        'painEntries': [for (final p in painEntries) p.toJson()],
+        'techniquesPracticed': techniquesPracticed,
+        'positionalFocus': positionalFocus,
+        'techniqueSuccessRating': techniqueSuccessRating,
+        'sparringLog': sparringLog?.toJson(),
+        'keyTakeaway': keyTakeaway,
       };
 
   factory TrainingEntry.fromJson(Map<String, dynamic> json) {
@@ -89,11 +198,35 @@ class TrainingEntry {
       intensity: TrainingIntensity.values.byName(json['intensity'] as String),
       rating: json['rating'] as int,
       mood: json['mood'] != null ? Mood.values.byName(json['mood'] as String) : null,
+      goal: json['goal'] as String? ?? '',
+      durationMinutes: json['durationMinutes'] as int?,
       whatWentWell: json['whatWentWell'] as String? ?? '',
       whatWentBad: json['whatWentBad'] as String? ?? '',
       improvement: json['improvement'] as String? ?? '',
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
+      sessionType: json['sessionType'] != null ? SessionType.values.byName(json['sessionType'] as String) : null,
+      additionalSports: [
+        for (final sport in json['additionalSports'] as List<dynamic>? ?? const []) sport as String,
+      ],
+      rpe: json['rpe'] as int?,
+      energyLevelPre: json['energyLevelPre'] as int?,
+      focusLevelPre: json['focusLevelPre'] as int?,
+      sleepQuality: json['sleepQuality'] as int?,
+      painEntries: [
+        for (final item in json['painEntries'] as List<dynamic>? ?? const [])
+          PainEntry.fromJson(item as Map<String, dynamic>),
+      ],
+      techniquesPracticed: [
+        for (final t in json['techniquesPracticed'] as List<dynamic>? ?? const []) t as String,
+      ],
+      positionalFocus: [
+        for (final p in json['positionalFocus'] as List<dynamic>? ?? const []) p as String,
+      ],
+      techniqueSuccessRating: json['techniqueSuccessRating'] as int?,
+      sparringLog:
+          json['sparringLog'] != null ? SparringLog.fromJson(json['sparringLog'] as Map<String, dynamic>) : null,
+      keyTakeaway: json['keyTakeaway'] as String?,
     );
   }
 }

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import '../app_settings.dart';
 import '../app_strings.dart';
+import '../coach_guide.dart';
 import '../logbook_data.dart';
 import '../models/improvement_goal.dart';
+import '../widgets/coach_bubble.dart';
+import '../widgets/coach_tour.dart';
 
 /// Dient sowohl zum Anlegen eines neuen Ziels als auch -- wenn [existingGoal]
 /// gesetzt ist -- zum Bearbeiten eines bestehenden, statt ein fast
@@ -18,6 +21,14 @@ class CreateGoalScreen extends StatefulWidget {
 }
 
 class _CreateGoalScreenState extends State<CreateGoalScreen> {
+  static const _introId = 'create_goal_intro';
+
+  final _problemKey = GlobalKey();
+  final _titleKey = GlobalKey();
+  final _descriptionKey = GlobalKey();
+  final _categoryKey = GlobalKey();
+  final _priorityKey = GlobalKey();
+
   late final _titleController = TextEditingController(text: widget.existingGoal?.title ?? '');
   late final _descriptionController = TextEditingController(
     text: widget.existingGoal?.description ?? widget.initialDescription,
@@ -27,6 +38,35 @@ class _CreateGoalScreenState extends State<CreateGoalScreen> {
 
   bool get _isEditing => widget.existingGoal != null;
   bool get _canSave => _titleController.text.trim().isNotEmpty;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!CoachGuide.hasSeen(_introId)) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) _startTour();
+      });
+    }
+  }
+
+  void _startTour() {
+    CoachGuide.markSeen(_introId);
+    final s = AppStrings.of(AppSettings.locale.value);
+    showCoachTour(
+      context,
+      steps: [
+        if (!_isEditing && widget.initialDescription.isNotEmpty)
+          CoachTourStep(anchorKey: _problemKey, message: s('coachTourGoalProblem')),
+        CoachTourStep(anchorKey: _titleKey, message: s('coachTourGoalTitle')),
+        CoachTourStep(anchorKey: _descriptionKey, message: s('coachTourGoalDescription')),
+        CoachTourStep(anchorKey: _categoryKey, message: s('coachTourGoalCategory')),
+        CoachTourStep(anchorKey: _priorityKey, message: s('coachTourGoalPriority')),
+      ],
+      nextLabel: s('coachTourNext'),
+      doneLabel: s('coachTourDone'),
+      skipLabel: s('coachTourSkip'),
+    );
+  }
 
   @override
   void dispose() {
@@ -137,73 +177,110 @@ class _CreateGoalScreenState extends State<CreateGoalScreen> {
         final s = AppStrings.of(locale);
         return Scaffold(
           appBar: AppBar(title: Text(_isEditing ? s('editGoal') : s('createGoal'))),
+          // Guide als Body-Overlay statt AppBar-Action, siehe logbook_screen.dart
+          // (AppBar schneidet überlaufende Kind-Inhalte ab).
           body: SafeArea(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+            child: Stack(
+              clipBehavior: Clip.none,
               children: [
-                if (!_isEditing && widget.initialDescription.isNotEmpty) ...[
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: Colors.white24),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          s('problemLabel'),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade400,
-                            fontWeight: FontWeight.w700,
+                ListView(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+                  children: [
+                    if (!_isEditing && widget.initialDescription.isNotEmpty) ...[
+                      KeyedSubtree(
+                        key: _problemKey,
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: Colors.white24),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                s('problemLabel'),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade400,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                widget.initialDescription,
+                                style: const TextStyle(color: Colors.white, fontSize: 14),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          widget.initialDescription,
-                          style: const TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                    KeyedSubtree(
+                      key: _titleKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _sectionLabel(s('goalTitleLabel')),
+                          TextField(
+                            controller: _titleController,
+                            autofocus: widget.initialDescription.isEmpty && !_isEditing,
+                            onChanged: (_) => setState(() {}),
+                            decoration: _fieldDecoration(),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    KeyedSubtree(
+                      key: _descriptionKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _sectionLabel(s('goalDescriptionLabel')),
+                          TextField(
+                            controller: _descriptionController,
+                            maxLines: 3,
+                            minLines: 2,
+                            decoration: _fieldDecoration(),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    KeyedSubtree(
+                      key: _categoryKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [_sectionLabel(s('goalCategoryLabel')), _buildCategoryPicker(s)],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    KeyedSubtree(
+                      key: _priorityKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [_sectionLabel(s('goalPriorityLabel')), _buildPriorityPicker(context, s)],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: _canSave ? () => _save(context) : null,
+                        style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
+                        child: Text(
+                          _isEditing ? s('saveGoal') : s('createGoal'),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                ],
-                _sectionLabel(s('goalTitleLabel')),
-                TextField(
-                  controller: _titleController,
-                  autofocus: widget.initialDescription.isEmpty && !_isEditing,
-                  onChanged: (_) => setState(() {}),
-                  decoration: _fieldDecoration(),
+                  ],
                 ),
-                const SizedBox(height: 24),
-                _sectionLabel(s('goalDescriptionLabel')),
-                TextField(
-                  controller: _descriptionController,
-                  maxLines: 3,
-                  minLines: 2,
-                  decoration: _fieldDecoration(),
-                ),
-                const SizedBox(height: 24),
-                _sectionLabel(s('goalCategoryLabel')),
-                _buildCategoryPicker(s),
-                const SizedBox(height: 24),
-                _sectionLabel(s('goalPriorityLabel')),
-                _buildPriorityPicker(context, s),
-                const SizedBox(height: 32),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: _canSave ? () => _save(context) : null,
-                    style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-                    child: Text(
-                      _isEditing ? s('saveGoal') : s('createGoal'),
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                ),
+                Positioned(top: 10, right: 20, child: CoachAvatarIcon(onTap: _startTour)),
               ],
             ),
           ),

@@ -3,19 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'models/goal_rating.dart';
 import 'models/improvement_goal.dart';
-import 'models/skill_rating.dart';
+import 'models/pain_entry.dart';
+import 'models/sparring_log.dart';
 import 'models/training_entry.dart';
 
 /// Logbuch-Daten, persistiert über SharedPreferences (JSON-serialisierte
-/// Listen) -- im Gegensatz zu StrengthData/TrainingPlanData muss ein
-/// Trainingstagebuch einen App-Neustart überleben.
+/// Listen) -- siehe auch StrengthData/TrainingPlanData, die demselben Muster
+/// folgen.
 class LogbookData {
   LogbookData._();
 
   static const _entriesKey = 'logbook_entries';
   static const _goalsKey = 'logbook_goals';
   static const _goalRatingsKey = 'logbook_goal_ratings';
-  static const _skillRatingsKey = 'logbook_skill_ratings';
 
   static final ValueNotifier<List<TrainingEntry>> entries =
       ValueNotifier<List<TrainingEntry>>([]);
@@ -23,8 +23,6 @@ class LogbookData {
       ValueNotifier<List<ImprovementGoal>>([]);
   static final ValueNotifier<List<GoalRating>> goalRatings =
       ValueNotifier<List<GoalRating>>([]);
-  static final ValueNotifier<List<SkillRating>> skillRatings =
-      ValueNotifier<List<SkillRating>>([]);
 
   static bool _loaded = false;
 
@@ -56,14 +54,6 @@ class LogbookData {
           GoalRating.fromJson(item as Map<String, dynamic>),
       ];
     }
-
-    final skillRatingsJson = prefs.getString(_skillRatingsKey);
-    if (skillRatingsJson != null) {
-      skillRatings.value = [
-        for (final item in jsonDecode(skillRatingsJson) as List<dynamic>)
-          SkillRating.fromJson(item as Map<String, dynamic>),
-      ];
-    }
   }
 
   static Future<void> _persistEntries() async {
@@ -90,14 +80,6 @@ class LogbookData {
     );
   }
 
-  static Future<void> _persistSkillRatings() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      _skillRatingsKey,
-      jsonEncode([for (final r in skillRatings.value) r.toJson()]),
-    );
-  }
-
   static String _newId() => DateTime.now().microsecondsSinceEpoch.toString();
 
   // --- Trainingseinträge ---
@@ -108,9 +90,23 @@ class LogbookData {
     required TrainingIntensity intensity,
     required int rating,
     Mood? mood,
+    String goal = '',
+    int? durationMinutes,
     String whatWentWell = '',
     String whatWentBad = '',
     String improvement = '',
+    SessionType? sessionType,
+    List<String> additionalSports = const [],
+    int? rpe,
+    int? energyLevelPre,
+    int? focusLevelPre,
+    int? sleepQuality,
+    List<PainEntry> painEntries = const [],
+    List<String> techniquesPracticed = const [],
+    List<String> positionalFocus = const [],
+    int? techniqueSuccessRating,
+    SparringLog? sparringLog,
+    String? keyTakeaway,
   }) {
     final now = DateTime.now();
     final entry = TrainingEntry(
@@ -120,11 +116,25 @@ class LogbookData {
       intensity: intensity,
       rating: rating,
       mood: mood,
+      goal: goal,
+      durationMinutes: durationMinutes,
       whatWentWell: whatWentWell,
       whatWentBad: whatWentBad,
       improvement: improvement,
       createdAt: now,
       updatedAt: now,
+      sessionType: sessionType,
+      additionalSports: additionalSports,
+      rpe: rpe,
+      energyLevelPre: energyLevelPre,
+      focusLevelPre: focusLevelPre,
+      sleepQuality: sleepQuality,
+      painEntries: painEntries,
+      techniquesPracticed: techniquesPracticed,
+      positionalFocus: positionalFocus,
+      techniqueSuccessRating: techniqueSuccessRating,
+      sparringLog: sparringLog,
+      keyTakeaway: keyTakeaway,
     );
     entries.value = [...entries.value, entry];
     _persistEntries();
@@ -218,18 +228,6 @@ class LogbookData {
 
   static List<GoalRating> ratingsForGoal(String goalId) {
     return goalRatings.value.where((r) => r.goalId == goalId).toList()
-      ..sort((a, b) => a.date.compareTo(b.date));
-  }
-
-  // --- Skill-Selbsteinschätzungen ---
-
-  static void addSkillRating(SkillRating rating) {
-    skillRatings.value = [...skillRatings.value, rating];
-    _persistSkillRatings();
-  }
-
-  static List<SkillRating> ratingsForSkill(SkillArea area, String skillKey) {
-    return skillRatings.value.where((r) => r.area == area && r.skillKey == skillKey).toList()
       ..sort((a, b) => a.date.compareTo(b.date));
   }
 

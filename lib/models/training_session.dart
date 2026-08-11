@@ -38,4 +38,14 @@ class TrainingSession {
   final String? customCategory;
 
   String displayCategory(AppStrings s) => customCategory ?? s(categoryKey!);
+
+  Map<String, dynamic> toJson() => {
+        'categoryKey': categoryKey,
+        'customCategory': customCategory,
+      };
+
+  factory TrainingSession.fromJson(Map<String, dynamic> json) => TrainingSession(
+        categoryKey: json['categoryKey'] as String?,
+        customCategory: json['customCategory'] as String?,
+      );
 }

@@ -9,6 +9,16 @@ class SessionEntry {
 
   final double weight;
   final DateTime timestamp;
+
+  Map<String, dynamic> toJson() => {
+        'weight': weight,
+        'timestamp': timestamp.toIso8601String(),
+      };
+
+  factory SessionEntry.fromJson(Map<String, dynamic> json) => SessionEntry(
+        weight: (json['weight'] as num).toDouble(),
+        timestamp: DateTime.parse(json['timestamp'] as String),
+      );
 }
 
 /// Eine Übung ist entweder vordefiniert (`nameKey`, wird übersetzt) oder vom
@@ -35,4 +45,19 @@ class Exercise {
       entries: entries.where((e) => !identical(e, entry)).toList(),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'nameKey': nameKey,
+        'customName': customName,
+        'entries': [for (final e in entries) e.toJson()],
+      };
+
+  factory Exercise.fromJson(Map<String, dynamic> json) => Exercise(
+        nameKey: json['nameKey'] as String?,
+        customName: json['customName'] as String?,
+        entries: [
+          for (final item in json['entries'] as List<dynamic>)
+            SessionEntry.fromJson(item as Map<String, dynamic>),
+        ],
+      );
 }

@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'app_settings.dart';
+import 'coach_guide.dart';
 import 'logbook_data.dart';
 import 'screens/home_screen.dart';
+import 'strength_data.dart';
+import 'training_plan_data.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await LogbookData.load();
+  await StrengthData.load();
+  await TrainingPlanData.load();
+  await CoachGuide.load();
   runApp(const MyApp());
 }
 
