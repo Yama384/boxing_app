@@ -68,11 +68,4 @@ class StrengthData {
     exercises.value = exercises.value.where((e) => !identical(e, target)).toList();
     _persist();
   }
-
-  static void insertExerciseAt(int index, Exercise exercise) {
-    final updated = [...exercises.value];
-    updated.insert(index.clamp(0, updated.length), exercise);
-    exercises.value = updated;
-    _persist();
-  }
 }

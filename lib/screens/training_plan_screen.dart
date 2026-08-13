@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import '../app_settings.dart';
 import '../app_strings.dart';
+import '../coach_guide.dart';
 import '../models/training_session.dart';
 import '../training_plan_data.dart';
 import '../widgets/coach_bubble.dart';
+import '../widgets/coach_tour.dart';
+import '../widgets/confirm_delete_dialog.dart';
 
 const _categoryColors = <String, Color>{
   'categoryStrength': Colors.orangeAccent,
@@ -32,25 +35,55 @@ Color _colorForSession(TrainingSession session) {
   return _customCategoryColors[index];
 }
 
-class TrainingPlanScreen extends StatelessWidget {
+class TrainingPlanScreen extends StatefulWidget {
   const TrainingPlanScreen({super.key});
 
-  void _deleteSession(
+  @override
+  State<TrainingPlanScreen> createState() => _TrainingPlanScreenState();
+}
+
+class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
+  static const _introId = 'training_plan_intro';
+  final _weekKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    if (!CoachGuide.hasSeen(_introId)) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) _startTour();
+      });
+    }
+  }
+
+  void _startTour() {
+    CoachGuide.markSeen(_introId);
+    final s = AppStrings.of(AppSettings.locale.value);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showCoachTour(
+        context,
+        steps: [
+          CoachTourStep(anchorKey: _weekKey, message: s('coachPlanIntro1')),
+          CoachTourStep(anchorKey: _weekKey, message: s('coachPlanIntro2')),
+          CoachTourStep(anchorKey: _weekKey, message: s('coachPlanIntro3')),
+        ],
+        nextLabel: s('coachTourNext'),
+        doneLabel: s('coachTourDone'),
+        skipLabel: s('coachTourSkip'),
+      );
+    });
+  }
+
+  Future<void> _deleteSession(
     BuildContext context,
     AppStrings s,
     Weekday day,
     TrainingSession session,
-  ) {
+  ) async {
+    final confirmed = await confirmDelete(context, s);
+    if (!confirmed) return;
     TrainingPlanData.removeSession(day, session);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(s('sessionDeleted')),
-        action: SnackBarAction(
-          label: s('undo'),
-          onPressed: () => TrainingPlanData.addSession(day, session),
-        ),
-      ),
-    );
   }
 
   Future<void> _showAddSessionDialog(
@@ -242,34 +275,27 @@ class TrainingPlanScreen extends StatelessWidget {
       builder: (context, locale, _) {
         final s = AppStrings.of(locale);
         return Scaffold(
-          appBar: AppBar(title: Text(s('trainingPlan'))),
-          // Coach-Guide als Body-Overlay (nicht AppBar-Actions) -- die AppBar
-          // schneidet überlaufende Kind-Inhalte ab, siehe logbook_screen.dart.
-          body: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              ValueListenableBuilder<Map<Weekday, List<TrainingSession>>>(
-                valueListenable: TrainingPlanData.week,
-                builder: (context, week, _) {
-                  return ListView(
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                      for (final day in Weekday.values)
-                        _dayCard(context, s, day, week[day]!),
-                    ],
-                  );
-                },
-              ),
-              Positioned(
-                top: 10,
-                right: 20,
-                child: CoachBubble(
-                  introId: 'training_plan_intro',
-                  side: CoachBubbleSide.right,
-                  messages: [s('coachPlanIntro1'), s('coachPlanIntro2'), s('coachPlanIntro3')],
-                ),
+          appBar: AppBar(
+            title: Text(s('trainingPlan')),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: Center(child: CoachAvatarIcon(onTap: _startTour)),
               ),
             ],
+          ),
+          body: ValueListenableBuilder<Map<Weekday, List<TrainingSession>>>(
+            valueListenable: TrainingPlanData.week,
+            builder: (context, week, _) {
+              return ListView(
+                key: _weekKey,
+                padding: const EdgeInsets.all(16),
+                children: [
+                  for (final day in Weekday.values)
+                    _dayCard(context, s, day, week[day]!),
+                ],
+              );
+            },
           ),
         );
       },

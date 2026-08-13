@@ -103,7 +103,6 @@ class LogbookData {
     int? sleepQuality,
     List<PainEntry> painEntries = const [],
     List<String> techniquesPracticed = const [],
-    List<String> positionalFocus = const [],
     int? techniqueSuccessRating,
     SparringLog? sparringLog,
     String? keyTakeaway,
@@ -131,7 +130,6 @@ class LogbookData {
       sleepQuality: sleepQuality,
       painEntries: painEntries,
       techniquesPracticed: techniquesPracticed,
-      positionalFocus: positionalFocus,
       techniqueSuccessRating: techniqueSuccessRating,
       sparringLog: sparringLog,
       keyTakeaway: keyTakeaway,
@@ -143,11 +141,6 @@ class LogbookData {
 
   static void deleteEntry(TrainingEntry entry) {
     entries.value = entries.value.where((e) => e.id != entry.id).toList();
-    _persistEntries();
-  }
-
-  static void restoreEntry(TrainingEntry entry) {
-    entries.value = [...entries.value, entry];
     _persistEntries();
   }
 
@@ -186,11 +179,6 @@ class LogbookData {
     goalRatings.value = goalRatings.value.where((r) => r.goalId != goal.id).toList();
     _persistGoals();
     _persistGoalRatings();
-  }
-
-  static void restoreGoal(ImprovementGoal goal) {
-    goals.value = [...goals.value, goal];
-    _persistGoals();
   }
 
   /// Wichtigstes aktives Ziel für "Dein Fokus heute": höchste Priorität

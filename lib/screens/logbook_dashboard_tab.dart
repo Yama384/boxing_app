@@ -140,10 +140,23 @@ class LogbookDashboardTab extends StatelessWidget {
   }
 
   Widget _buildGoalsSection(BuildContext context, List<ImprovementGoal> activeGoals) {
+    final primary = Theme.of(context).colorScheme.primary;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(s('myGoals'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(s('myGoals'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
+            InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const CreateGoalScreen()),
+              ),
+              child: Icon(Icons.add_circle_outline, color: primary),
+            ),
+          ],
+        ),
         const SizedBox(height: 12),
         if (activeGoals.isEmpty)
           Text(s('noGoalsYet'), style: TextStyle(color: Colors.grey.shade500))

@@ -1,12 +1,51 @@
 import 'package:flutter/material.dart';
 import '../app_settings.dart';
 import '../app_strings.dart';
+import '../coach_guide.dart';
 import '../models/exercise.dart';
 import '../strength_data.dart';
+import '../widgets/coach_bubble.dart';
+import '../widgets/coach_tour.dart';
+import '../widgets/confirm_delete_dialog.dart';
 import 'exercise_detail_screen.dart';
 
-class StrengthScreen extends StatelessWidget {
+class StrengthScreen extends StatefulWidget {
   const StrengthScreen({super.key});
+
+  @override
+  State<StrengthScreen> createState() => _StrengthScreenState();
+}
+
+class _StrengthScreenState extends State<StrengthScreen> {
+  static const _introId = 'strength_intro';
+  final _addKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    if (!CoachGuide.hasSeen(_introId)) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) _startTour();
+      });
+    }
+  }
+
+  void _startTour() {
+    CoachGuide.markSeen(_introId);
+    final s = AppStrings.of(AppSettings.locale.value);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showCoachTour(
+        context,
+        steps: [
+          CoachTourStep(anchorKey: _addKey, message: s('coachTourStrengthIntro')),
+        ],
+        nextLabel: s('coachTourNext'),
+        doneLabel: s('coachTourDone'),
+        skipLabel: s('coachTourSkip'),
+      );
+    });
+  }
 
   Future<void> _showAddExerciseDialog(BuildContext context, AppStrings s) async {
     final controller = TextEditingController();
@@ -45,17 +84,8 @@ class StrengthScreen extends StatelessWidget {
     return '${s('lastEntry')}: ${last.weight} kg ($date)';
   }
 
-  void _deleteExercise(BuildContext context, AppStrings s, int index, Exercise exercise) {
+  void _deleteExercise(Exercise exercise) {
     StrengthData.removeExercise(exercise);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(s('exerciseDeleted')),
-        action: SnackBarAction(
-          label: s('undo'),
-          onPressed: () => StrengthData.insertExerciseAt(index, exercise),
-        ),
-      ),
-    );
   }
 
   @override
@@ -65,8 +95,17 @@ class StrengthScreen extends StatelessWidget {
       builder: (context, locale, _) {
         final s = AppStrings.of(locale);
         return Scaffold(
-          appBar: AppBar(title: Text(s('strength'))),
+          appBar: AppBar(
+            title: Text(s('strength')),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: Center(child: CoachAvatarIcon(onTap: _startTour)),
+              ),
+            ],
+          ),
           floatingActionButton: FloatingActionButton(
+            key: _addKey,
             onPressed: () => _showAddExerciseDialog(context, s),
             child: const Icon(Icons.add),
           ),
@@ -86,7 +125,8 @@ class StrengthScreen extends StatelessWidget {
                       color: Colors.red,
                       child: const Icon(Icons.delete, color: Colors.white),
                     ),
-                    onDismissed: (_) => _deleteExercise(context, s, index, exercise),
+                    confirmDismiss: (_) => confirmDelete(context, s),
+                    onDismissed: (_) => _deleteExercise(exercise),
                     child: ListTile(
                       leading: const Icon(Icons.fitness_center),
                       title: Text(exercise.displayName(s)),

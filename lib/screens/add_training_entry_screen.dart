@@ -77,7 +77,6 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
   final _painKey = GlobalKey();
   final _goalKey = GlobalKey();
   final _techniquesKey = GlobalKey();
-  final _positionKey = GlobalKey();
   final _successKey = GlobalKey();
   final _sparringKey = GlobalKey();
   final _ratingKey = GlobalKey();
@@ -101,7 +100,6 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
   final List<PainEntry> _painEntries = [];
 
   final List<String> _techniquesPracticed = [];
-  final List<String> _positionalFocus = [];
   int _techniqueSuccessRating = 0;
   int? _rounds;
   int? _roundLengthMinutes;
@@ -121,7 +119,6 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
   final _improvementController = TextEditingController();
   final _keyTakeawayController = TextEditingController();
   final _techniqueTagController = TextEditingController();
-  final _positionTagController = TextEditingController();
 
   bool get _canSave => _trainingType != null;
 
@@ -148,7 +145,6 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
     _improvementController.dispose();
     _keyTakeawayController.dispose();
     _techniqueTagController.dispose();
-    _positionTagController.dispose();
     super.dispose();
   }
 
@@ -256,7 +252,6 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
       sleepQuality: _sleepQuality == 0 ? null : _sleepQuality,
       painEntries: _painEnabled ? _painEntries : const [],
       techniquesPracticed: _techniquesPracticed,
-      positionalFocus: _positionalFocus,
       techniqueSuccessRating: _techniqueSuccessRating == 0 ? null : _techniqueSuccessRating,
       sparringLog: sparringLog,
       keyTakeaway: _keyTakeawayController.text.trim().isEmpty ? null : _keyTakeawayController.text.trim(),
@@ -850,21 +845,6 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
         ),
         const SizedBox(height: 24),
         KeyedSubtree(
-          key: _positionKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _sectionLabel(s('positionalFocusLabel')),
-              _tagInput(
-                tags: _positionalFocus,
-                controller: _positionTagController,
-                hintText: s('addPositionHint'),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 24),
-        KeyedSubtree(
           key: _successKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1019,7 +999,6 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
       'wizardStepTechnique' || 'wizardStepTechniqueOnly' => [
           CoachTourStep(anchorKey: _goalKey, message: s('coachTipGoal')),
           CoachTourStep(anchorKey: _techniquesKey, message: s('coachTourTechniques')),
-          CoachTourStep(anchorKey: _positionKey, message: s('coachTourPositionalFocus')),
           CoachTourStep(anchorKey: _successKey, message: s('coachTourSuccessRating')),
           if (_showSparringLog) CoachTourStep(anchorKey: _sparringKey, message: s('coachTourSparringLog')),
         ],
@@ -1072,16 +1051,9 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
           ],
         ),
         const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                s(titles[_currentStep]),
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
-              ),
-            ),
-            CoachAvatarIcon(onTap: () => _startStepTour(context, s), size: 26),
-          ],
+        Text(
+          s(titles[_currentStep]),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
         ),
       ],
     );
@@ -1098,7 +1070,15 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
         final isFirstStep = _currentStep == 0;
         final isLastStep = _currentStep == steps.length - 1;
         return Scaffold(
-          appBar: AppBar(title: Text(s('addTrainingEntry'))),
+          appBar: AppBar(
+            title: Text(s('addTrainingEntry')),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: Center(child: CoachAvatarIcon(onTap: () => _startStepTour(context, s))),
+              ),
+            ],
+          ),
           body: SafeArea(
             child: Column(
               children: [

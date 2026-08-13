@@ -63,7 +63,6 @@ class TrainingEntry {
     this.sleepQuality,
     this.painEntries = const [],
     this.techniquesPracticed = const [],
-    this.positionalFocus = const [],
     this.techniqueSuccessRating,
     this.sparringLog,
     this.keyTakeaway,
@@ -101,7 +100,6 @@ class TrainingEntry {
   final int? sleepQuality;
   final List<PainEntry> painEntries;
   final List<String> techniquesPracticed;
-  final List<String> positionalFocus;
   final int? techniqueSuccessRating;
   final SparringLog? sparringLog;
 
@@ -128,7 +126,6 @@ class TrainingEntry {
     int? sleepQuality,
     List<PainEntry>? painEntries,
     List<String>? techniquesPracticed,
-    List<String>? positionalFocus,
     int? techniqueSuccessRating,
     SparringLog? sparringLog,
     String? keyTakeaway,
@@ -155,7 +152,6 @@ class TrainingEntry {
       sleepQuality: sleepQuality ?? this.sleepQuality,
       painEntries: painEntries ?? this.painEntries,
       techniquesPracticed: techniquesPracticed ?? this.techniquesPracticed,
-      positionalFocus: positionalFocus ?? this.positionalFocus,
       techniqueSuccessRating: techniqueSuccessRating ?? this.techniqueSuccessRating,
       sparringLog: sparringLog ?? this.sparringLog,
       keyTakeaway: keyTakeaway ?? this.keyTakeaway,
@@ -184,7 +180,6 @@ class TrainingEntry {
         'sleepQuality': sleepQuality,
         'painEntries': [for (final p in painEntries) p.toJson()],
         'techniquesPracticed': techniquesPracticed,
-        'positionalFocus': positionalFocus,
         'techniqueSuccessRating': techniqueSuccessRating,
         'sparringLog': sparringLog?.toJson(),
         'keyTakeaway': keyTakeaway,
@@ -219,9 +214,6 @@ class TrainingEntry {
       ],
       techniquesPracticed: [
         for (final t in json['techniquesPracticed'] as List<dynamic>? ?? const []) t as String,
-      ],
-      positionalFocus: [
-        for (final p in json['positionalFocus'] as List<dynamic>? ?? const []) p as String,
       ],
       techniqueSuccessRating: json['techniqueSuccessRating'] as int?,
       sparringLog:

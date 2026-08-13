@@ -4,6 +4,7 @@ import '../app_strings.dart';
 import '../logbook_data.dart';
 import '../models/goal_rating.dart';
 import '../models/improvement_goal.dart';
+import '../widgets/confirm_delete_dialog.dart';
 import 'create_goal_screen.dart';
 
 class GoalDetailScreen extends StatelessWidget {
@@ -134,15 +135,11 @@ class GoalDetailScreen extends StatelessWidget {
     );
   }
 
-  void _delete(BuildContext context, AppStrings s, ImprovementGoal current) {
+  Future<void> _delete(BuildContext context, AppStrings s, ImprovementGoal current) async {
+    final confirmed = await confirmDelete(context, s);
+    if (!confirmed) return;
     LogbookData.deleteGoal(current);
-    Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(s('goalDeleted')),
-        action: SnackBarAction(label: s('undo'), onPressed: () => LogbookData.restoreGoal(current)),
-      ),
-    );
+    if (context.mounted) Navigator.of(context).pop();
   }
 
   @override

@@ -2,6 +2,9 @@ import 'package:flutter/cupertino.dart' show CupertinoSlidingSegmentedControl;
 import 'package:flutter/material.dart';
 import '../app_settings.dart';
 import '../app_strings.dart';
+import '../coach_guide.dart';
+import '../widgets/coach_bubble.dart';
+import '../widgets/coach_tour.dart';
 import 'interval_timer_tab.dart';
 import 'simple_timer_tab.dart';
 import 'stopwatch_tab.dart';
@@ -16,17 +19,52 @@ class TimerScreen extends StatefulWidget {
 }
 
 class _TimerScreenState extends State<TimerScreen> {
+  static const _introId = 'timer_intro';
+  final _modeSwitchKey = GlobalKey();
+
   _TimerMode _mode = _TimerMode.stopwatch;
 
-  Widget _buildBody() {
-    switch (_mode) {
-      case _TimerMode.stopwatch:
-        return const StopwatchTab();
-      case _TimerMode.simple:
-        return const SimpleTimerTab();
-      case _TimerMode.interval:
-        return const IntervalTimerTab();
+  @override
+  void initState() {
+    super.initState();
+    if (!CoachGuide.hasSeen(_introId)) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) _startTour();
+      });
     }
+  }
+
+  void _startTour() {
+    CoachGuide.markSeen(_introId);
+    final s = AppStrings.of(AppSettings.locale.value);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showCoachTour(
+        context,
+        steps: [
+          CoachTourStep(anchorKey: _modeSwitchKey, message: s('coachTourTimerModes')),
+        ],
+        nextLabel: s('coachTourNext'),
+        doneLabel: s('coachTourDone'),
+        skipLabel: s('coachTourSkip'),
+      );
+    });
+  }
+
+  // IndexedStack statt eines Switches: die drei Tabs bleiben beim Umschalten
+  // dauerhaft gemountet, statt bei jedem Wechsel disposed und neu gebaut zu
+  // werden (inkl. AnimationController/Timer-Neuaufbau). Das macht den
+  // Tab-Wechsel spürbar flüssiger und lässt eine laufende Stoppuhr/einen
+  // laufenden Timer im Hintergrund weiterlaufen, statt sie zurückzusetzen.
+  Widget _buildBody() {
+    return IndexedStack(
+      index: _mode.index,
+      children: const [
+        StopwatchTab(),
+        SimpleTimerTab(),
+        IntervalTimerTab(),
+      ],
+    );
   }
 
   Widget _segmentLabel(String text) {
@@ -46,7 +84,15 @@ class _TimerScreenState extends State<TimerScreen> {
       builder: (context, locale, _) {
         final s = AppStrings.of(locale);
         return Scaffold(
-          appBar: AppBar(title: Text(s('timer'))),
+          appBar: AppBar(
+            title: Text(s('timer')),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: Center(child: CoachAvatarIcon(onTap: _startTour)),
+              ),
+            ],
+          ),
           body: SafeArea(
             child: Column(
               children: [
@@ -54,6 +100,7 @@ class _TimerScreenState extends State<TimerScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                   child: CupertinoSlidingSegmentedControl<_TimerMode>(
+                    key: _modeSwitchKey,
                     groupValue: _mode,
                     backgroundColor: const Color(0xFF1C1C1E),
                     thumbColor: Theme.of(context).colorScheme.primary,

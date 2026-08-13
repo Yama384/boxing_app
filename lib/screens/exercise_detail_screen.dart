@@ -5,6 +5,7 @@ import '../app_settings.dart';
 import '../app_strings.dart';
 import '../models/exercise.dart';
 import '../strength_data.dart';
+import '../widgets/confirm_delete_dialog.dart';
 
 enum _DetailTab { entries, progress }
 
@@ -69,22 +70,8 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
     return '${timestamp.day}.${timestamp.month}.${timestamp.year}';
   }
 
-  void _deleteEntry(
-    BuildContext context,
-    AppStrings s,
-    Exercise current,
-    SessionEntry entry,
-  ) {
+  void _deleteEntry(Exercise current, SessionEntry entry) {
     StrengthData.removeEntryFrom(current, entry);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(s('entryDeleted')),
-        action: SnackBarAction(
-          label: s('undo'),
-          onPressed: () => StrengthData.addEntryTo(current, entry),
-        ),
-      ),
-    );
   }
 
   Widget _buildEntriesList(
@@ -119,7 +106,8 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
             color: Colors.red,
             child: const Icon(Icons.delete, color: Colors.white),
           ),
-          onDismissed: (_) => _deleteEntry(context, s, current, entry),
+          confirmDismiss: (_) => confirmDelete(context, s),
+          onDismissed: (_) => _deleteEntry(current, entry),
           child: ListTile(
             leading: const Icon(Icons.emoji_events_outlined),
             title: Text('${entry.weight} kg'),

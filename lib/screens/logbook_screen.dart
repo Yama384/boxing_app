@@ -57,13 +57,19 @@ class _LogbookScreenState extends State<LogbookScreen> {
     });
   }
 
+  // IndexedStack statt eines Switches: Dashboard und Historie bleiben beim
+  // Umschalten dauerhaft gemountet (siehe timer_screen.dart), statt bei
+  // jedem Wechsel disposed und neu gebaut zu werden -- das spart die
+  // Rebuild-Kosten pro Tab-Wechsel und Such-/Filter-Eingaben in der
+  // Historie gehen beim Zurückwechseln nicht verloren.
   Widget _buildBody(AppStrings s) {
-    switch (_view) {
-      case _LogbookView.dashboard:
-        return LogbookDashboardTab(s: s, streakKey: _streakKey, focusKey: _focusKey, goalsKey: _goalsKey);
-      case _LogbookView.history:
-        return LogbookHistoryTab(s: s);
-    }
+    return IndexedStack(
+      index: _view.index,
+      children: [
+        LogbookDashboardTab(s: s, streakKey: _streakKey, focusKey: _focusKey, goalsKey: _goalsKey),
+        LogbookHistoryTab(s: s),
+      ],
+    );
   }
 
   Widget _segmentLabel(String text) {
@@ -83,7 +89,15 @@ class _LogbookScreenState extends State<LogbookScreen> {
       builder: (context, locale, _) {
         final s = AppStrings.of(locale);
         return Scaffold(
-          appBar: AppBar(title: Text(s('logbook'))),
+          appBar: AppBar(
+            title: Text(s('logbook')),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: Center(child: CoachAvatarIcon(onTap: _startTour)),
+              ),
+            ],
+          ),
           floatingActionButton: FloatingActionButton.extended(
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const AddTrainingEntryScreen()),
@@ -91,39 +105,25 @@ class _LogbookScreenState extends State<LogbookScreen> {
             icon: const Icon(Icons.add),
             label: Text(s('addTrainingEntry')),
           ),
-          // Bewusst als Stack-Overlay im Body statt in den AppBar-Actions:
-          // die AppBar (NavigationToolbar) schneidet überlaufende Kind-Inhalte
-          // ab, wodurch die Sprechblase unsichtbar wurde. Der Scaffold-Body hat
-          // dagegen kein Clipping, die Blase legt sich frei über den Inhalt.
           body: SafeArea(
-            child: Stack(
-              clipBehavior: Clip.none,
+            child: Column(
               children: [
-                Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                      child: CupertinoSlidingSegmentedControl<_LogbookView>(
-                        groupValue: _view,
-                        backgroundColor: const Color(0xFF1C1C1E),
-                        thumbColor: Theme.of(context).colorScheme.primary,
-                        children: {
-                          _LogbookView.dashboard: _segmentLabel(s('logbookDashboardTab')),
-                          _LogbookView.history: _segmentLabel(s('logbookHistoryTab')),
-                        },
-                        onValueChanged: (value) {
-                          if (value != null) setState(() => _view = value);
-                        },
-                      ),
-                    ),
-                    Expanded(child: _buildBody(s)),
-                  ],
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  child: CupertinoSlidingSegmentedControl<_LogbookView>(
+                    groupValue: _view,
+                    backgroundColor: const Color(0xFF1C1C1E),
+                    thumbColor: Theme.of(context).colorScheme.primary,
+                    children: {
+                      _LogbookView.dashboard: _segmentLabel(s('logbookDashboardTab')),
+                      _LogbookView.history: _segmentLabel(s('logbookHistoryTab')),
+                    },
+                    onValueChanged: (value) {
+                      if (value != null) setState(() => _view = value);
+                    },
+                  ),
                 ),
-                Positioned(
-                  top: 10,
-                  right: 20,
-                  child: CoachAvatarIcon(onTap: _startTour),
-                ),
+                Expanded(child: _buildBody(s)),
               ],
             ),
           ),

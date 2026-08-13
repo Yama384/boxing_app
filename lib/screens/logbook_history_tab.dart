@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../app_strings.dart';
 import '../logbook_data.dart';
 import '../models/training_entry.dart';
+import '../widgets/confirm_delete_dialog.dart';
 
 class LogbookHistoryTab extends StatefulWidget {
   const LogbookHistoryTab({super.key, required this.s});
@@ -129,17 +130,8 @@ class _LogbookHistoryTabState extends State<LogbookHistoryTab> {
     if (range != null) setState(() => _dateRangeFilter = range);
   }
 
-  void _deleteEntry(BuildContext context, TrainingEntry entry) {
+  void _deleteEntry(TrainingEntry entry) {
     LogbookData.deleteEntry(entry);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(widget.s('entryDeleted')),
-        action: SnackBarAction(
-          label: widget.s('undo'),
-          onPressed: () => LogbookData.restoreEntry(entry),
-        ),
-      ),
-    );
   }
 
   Widget _detailBlock(String label, String text) {
@@ -360,7 +352,8 @@ class _LogbookHistoryTabState extends State<LogbookHistoryTab> {
         margin: const EdgeInsets.only(bottom: 12),
         child: const Icon(Icons.delete, color: Colors.white),
       ),
-      onDismissed: (_) => _deleteEntry(context, entry),
+      confirmDismiss: (_) => confirmDelete(context, widget.s),
+      onDismissed: (_) => _deleteEntry(entry),
       child: GestureDetector(
         onTap: () => _showEntryDetail(context, entry),
         child: Container(
