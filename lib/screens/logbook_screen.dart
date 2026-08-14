@@ -6,10 +6,11 @@ import '../coach_guide.dart';
 import '../widgets/coach_bubble.dart';
 import '../widgets/coach_tour.dart';
 import 'add_training_entry_screen.dart';
+import 'logbook_analysis_tab.dart';
 import 'logbook_dashboard_tab.dart';
 import 'logbook_history_tab.dart';
 
-enum _LogbookView { dashboard, history }
+enum _LogbookView { dashboard, history, analysis }
 
 class LogbookScreen extends StatefulWidget {
   const LogbookScreen({super.key});
@@ -84,6 +85,7 @@ class _LogbookScreenState extends State<LogbookScreen> {
           goalsKey: _goalsKey,
         ),
         LogbookHistoryTab(s: s),
+        LogbookAnalysisTab(s: s),
       ],
     );
   }
@@ -143,6 +145,9 @@ class _LogbookScreenState extends State<LogbookScreen> {
                       ),
                       _LogbookView.history: _segmentLabel(
                         s('logbookHistoryTab'),
+                      ),
+                      _LogbookView.analysis: _segmentLabel(
+                        s('logbookAnalysisTab'),
                       ),
                     },
                     onValueChanged: (value) {
