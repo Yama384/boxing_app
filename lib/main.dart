@@ -39,7 +39,7 @@ class MyApp extends StatelessWidget {
           brightness: Brightness.dark,
         );
         return MaterialApp(
-          title: 'Boxing App',
+          title: 'Fight Trainer',
           theme: ThemeData(
             brightness: Brightness.dark,
             scaffoldBackgroundColor: const Color(0xFF121212),

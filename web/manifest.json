@@ -1,6 +1,6 @@
 {
-    "name": "boxing_app",
-    "short_name": "boxing_app",
+    "name": "Fight Trainer",
+    "short_name": "Fight Trainer",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

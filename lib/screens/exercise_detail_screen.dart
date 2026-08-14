@@ -225,6 +225,103 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
     );
   }
 
+  Widget _progressStat(
+    String label,
+    String value, {
+    Color? valueColor,
+    Widget? trailing,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey.shade500,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: valueColor ?? Colors.white,
+                ),
+              ),
+              if (trailing != null) ...[const SizedBox(width: 6), trailing],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressHeader(
+    AppStrings s,
+    List<SessionEntry> sorted,
+    double maxWeight,
+  ) {
+    final first = sorted.first.weight;
+    final last = sorted.last.weight;
+    final delta = last - first;
+    final trendColor = delta > 0
+        ? Colors.greenAccent
+        : (delta < 0 ? Colors.redAccent : Colors.grey.shade400);
+    return Row(
+      children: [
+        Expanded(
+          child: _progressStat(
+            s('progressCurrent'),
+            '${_formatWeight(last)} kg',
+            trailing: delta == 0
+                ? null
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        delta > 0
+                            ? Icons.arrow_upward_rounded
+                            : Icons.arrow_downward_rounded,
+                        size: 13,
+                        color: trendColor,
+                      ),
+                      Text(
+                        '${_formatWeight(delta.abs())} kg',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: trendColor,
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _progressStat(
+            s('personalRecordLabel'),
+            '${_formatWeight(maxWeight)} kg',
+            valueColor: Colors.amber,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildProgressChart(
     BuildContext context,
     AppStrings s,
@@ -234,10 +331,17 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
-          child: Text(
-            s('notEnoughData'),
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey.shade500),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.show_chart, size: 40, color: Colors.grey.shade700),
+              const SizedBox(height: 12),
+              Text(
+                s('notEnoughData'),
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey.shade500),
+              ),
+            ],
           ),
         ),
       );
@@ -263,55 +367,71 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
 
     final color = Theme.of(context).colorScheme.primary;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 32, 24, 24),
-      // Eigene "Zeichnen"-Animation: die Linie wächst kontrolliert von
-      // links (minX) nach rechts (maxX), statt fl_charts eingebauter
-      // Animation zu nutzen (die nur bei Datenänderungen greift, nicht
-      // beim erneuten Anzeigen desselben Diagramms). Weil dieses Widget
-      // bei jedem Tab-Wechsel neu gebaut wird, startet TweenAnimationBuilder
-      // jedes Mal wieder bei 0.
-      child: TweenAnimationBuilder<double>(
-        key: ValueKey(spots.length),
-        tween: Tween<double>(begin: 0, end: 1),
-        duration: const Duration(milliseconds: 1400),
-        curve: Curves.easeInOutCubic,
-        builder: (context, reveal, _) {
-          final cutoffX = minX + (maxX - minX) * reveal;
-          final revealedSpots = <FlSpot>[];
-          for (final spot in spots) {
-            if (spot.x <= cutoffX) {
-              revealedSpots.add(spot);
-            } else {
-              final prev = revealedSpots.isNotEmpty
-                  ? revealedSpots.last
-                  : spots.first;
-              if (cutoffX > prev.x) {
-                final t = (cutoffX - prev.x) / (spot.x - prev.x);
-                revealedSpots.add(
-                  FlSpot(cutoffX, prev.y + (spot.y - prev.y) * t),
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+      children: [
+        _buildProgressHeader(s, sorted, maxWeight),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.fromLTRB(8, 24, 20, 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1C1C1E),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: SizedBox(
+            height: 260,
+            // Eigene "Zeichnen"-Animation: die Linie wächst kontrolliert von
+            // links (minX) nach rechts (maxX), statt fl_charts eingebauter
+            // Animation zu nutzen (die nur bei Datenänderungen greift, nicht
+            // beim erneuten Anzeigen desselben Diagramms). Weil dieses
+            // Widget bei jedem Tab-Wechsel neu gebaut wird, startet
+            // TweenAnimationBuilder jedes Mal wieder bei 0.
+            child: TweenAnimationBuilder<double>(
+              key: ValueKey(spots.length),
+              tween: Tween<double>(begin: 0, end: 1),
+              duration: const Duration(milliseconds: 1400),
+              curve: Curves.easeInOutCubic,
+              builder: (context, reveal, _) {
+                final cutoffX = minX + (maxX - minX) * reveal;
+                final revealedSpots = <FlSpot>[];
+                for (final spot in spots) {
+                  if (spot.x <= cutoffX) {
+                    revealedSpots.add(spot);
+                  } else {
+                    final prev = revealedSpots.isNotEmpty
+                        ? revealedSpots.last
+                        : spots.first;
+                    if (cutoffX > prev.x) {
+                      final t = (cutoffX - prev.x) / (spot.x - prev.x);
+                      revealedSpots.add(
+                        FlSpot(cutoffX, prev.y + (spot.y - prev.y) * t),
+                      );
+                    }
+                    break;
+                  }
+                }
+                final lastIndex = revealedSpots.length - 1;
+                return _buildChart(
+                  s,
+                  color,
+                  minX,
+                  maxX,
+                  minWeight,
+                  maxWeight,
+                  weightPadding,
+                  revealedSpots,
+                  lastIndex,
                 );
-              }
-              break;
-            }
-          }
-          final lastIndex = revealedSpots.length - 1;
-          return _buildChart(
-            color,
-            minX,
-            maxX,
-            minWeight,
-            maxWeight,
-            weightPadding,
-            revealedSpots,
-            lastIndex,
-          );
-        },
-      ),
+              },
+            ),
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildChart(
+    AppStrings s,
     Color color,
     double minX,
     double maxX,
@@ -328,8 +448,37 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
         maxX: maxX,
         minY: minWeight - weightPadding,
         maxY: maxWeight + weightPadding,
-        gridData: const FlGridData(show: false),
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: weightPadding.clamp(1, double.infinity),
+          getDrawingHorizontalLine: (value) => FlLine(
+            color: Colors.white.withValues(alpha: 0.06),
+            strokeWidth: 1,
+          ),
+        ),
         borderData: FlBorderData(show: false),
+        extraLinesData: ExtraLinesData(
+          horizontalLines: [
+            HorizontalLine(
+              y: maxWeight,
+              color: Colors.amber.withValues(alpha: 0.55),
+              strokeWidth: 1.5,
+              dashArray: [6, 5],
+              label: HorizontalLineLabel(
+                show: true,
+                alignment: Alignment.topRight,
+                padding: const EdgeInsets.only(bottom: 4, right: 4),
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.amber,
+                ),
+                labelResolver: (_) => s('personalRecord'),
+              ),
+            ),
+          ],
+        ),
         titlesData: FlTitlesData(
           topTitles: const AxisTitles(
             sideTitles: SideTitles(showTitles: false),
@@ -371,7 +520,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
             getTooltipItems: (touchedSpots) => touchedSpots.map((spot) {
               final date = DateTime.fromMillisecondsSinceEpoch(spot.x.round());
               return LineTooltipItem(
-                '${spot.y} kg\n',
+                '${_formatWeight(spot.y)} kg\n',
                 const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -404,6 +553,15 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
               show: true,
               getDotPainter: (spot, percent, bar, index) {
                 final isLast = index == lastIndex;
+                final isPr = spot.y == maxWeight;
+                if (isPr) {
+                  return FlDotCirclePainter(
+                    radius: isLast ? 7 : 5,
+                    color: Colors.amber,
+                    strokeWidth: 2,
+                    strokeColor: const Color(0xFF1C1C1E),
+                  );
+                }
                 return FlDotCirclePainter(
                   radius: isLast ? 6 : 3.5,
                   color: isLast ? color : const Color(0xFF1C1C1E),

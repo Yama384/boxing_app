@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../app_settings.dart';
 import '../app_strings.dart';
-import '../logbook_data.dart';
-import '../models/training_entry.dart';
 import 'add_training_entry_screen.dart';
 import 'logbook_screen.dart';
 import 'settings_screen.dart';
@@ -12,39 +10,6 @@ import 'training_plan_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-
-  Widget _buildStreakBadge(AppStrings s) {
-    return ValueListenableBuilder<List<TrainingEntry>>(
-      valueListenable: LogbookData.entries,
-      builder: (context, _, _) {
-        final streak = LogbookData.currentStreak;
-        if (streak <= 0) return const SizedBox.shrink();
-        return Container(
-          margin: const EdgeInsets.only(top: 10),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: Colors.orangeAccent.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('🔥', style: TextStyle(fontSize: 14)),
-              const SizedBox(width: 6),
-              Text(
-                s('homeStreakBadge').replaceFirst('{n}', '$streak'),
-                style: const TextStyle(
-                  color: Colors.orangeAccent,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
   Widget _buildQuickAdd(BuildContext context, AppStrings s) {
     final primary = Theme.of(context).colorScheme.primary;
@@ -116,7 +81,6 @@ class HomeScreen extends StatelessWidget {
                       color: Colors.grey.shade500,
                     ),
                   ),
-                  _buildStreakBadge(s),
                   const SizedBox(height: 24),
                   _buildQuickAdd(context, s),
                   const SizedBox(height: 24),

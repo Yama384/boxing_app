@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 
 const Map<String, Map<String, String>> _translations = {
   'de': {
-    'appTitle': 'Boxing App',
+    'appTitle': 'Fight Trainer',
     'tagline': 'Train. Track. Win.',
-    'homeStreakBadge': '{n} Tage Serie',
     'timer': 'Timer',
     'stopwatch': 'Stoppuhr',
     'interval': 'Intervalle',
@@ -59,6 +58,8 @@ const Map<String, Map<String, String>> _translations = {
     'save': 'Speichern',
     'renameExercise': 'Übung umbenennen',
     'personalRecord': 'PR',
+    'personalRecordLabel': 'Bestleistung',
+    'progressCurrent': 'Aktuell',
     'noExercisesYet': 'Noch keine Übungen',
     'noExercisesYetSubtitle':
         'Füg mit dem "+"-Button deine erste Kraftübung hinzu.',
@@ -386,9 +387,8 @@ const Map<String, Map<String, String>> _translations = {
     'keyTakeawayHint': 'Was war heute dein wichtigster Erkenntnisgewinn?',
   },
   'en': {
-    'appTitle': 'Boxing App',
+    'appTitle': 'Fight Trainer',
     'tagline': 'Train. Track. Win.',
-    'homeStreakBadge': '{n} day streak',
     'timer': 'Timer',
     'stopwatch': 'Stopwatch',
     'interval': 'Intervals',
@@ -442,6 +442,8 @@ const Map<String, Map<String, String>> _translations = {
     'save': 'Save',
     'renameExercise': 'Rename exercise',
     'personalRecord': 'PR',
+    'personalRecordLabel': 'Personal record',
+    'progressCurrent': 'Current',
     'noExercisesYet': 'No exercises yet',
     'noExercisesYetSubtitle':
         'Add your first strength exercise with the "+" button.',
