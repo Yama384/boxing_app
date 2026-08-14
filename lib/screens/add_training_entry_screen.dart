@@ -104,12 +104,6 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
   int? _rounds;
   int? _roundLengthMinutes;
   final Set<PartnerLevel> _partnerLevels = {};
-  int _submissionsFor = 0;
-  int _submissionsAgainst = 0;
-  int _takedownsFor = 0;
-  int _takedownsAgainst = 0;
-  int _strikesFor = 0;
-  int _strikesAgainst = 0;
 
   int _rating = 0;
   Mood? _mood;
@@ -122,15 +116,19 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
 
   bool get _canSave => _trainingType != null;
 
-  bool get _showTechniqueStep => _sessionType != SessionType.strengthConditioning;
-  bool get _showSparringLog => _sessionType == SessionType.sparring || _sessionType == SessionType.competitionPrep;
+  bool get _showTechniqueStep =>
+      _sessionType != SessionType.strengthConditioning;
+  bool get _showSparringLog =>
+      _sessionType == SessionType.sparring ||
+      _sessionType == SessionType.competitionPrep;
 
   List<String> get _stepTitleKeys => [
-        'wizardStepSession',
-        'wizardStepCheckIn',
-        if (_showTechniqueStep) (_showSparringLog ? 'wizardStepTechnique' : 'wizardStepTechniqueOnly'),
-        'wizardStepReflection',
-      ];
+    'wizardStepSession',
+    'wizardStepCheckIn',
+    if (_showTechniqueStep)
+      (_showSparringLog ? 'wizardStepTechnique' : 'wizardStepTechniqueOnly'),
+    'wizardStepReflection',
+  ];
 
   void _clampStep() {
     final maxIndex = _stepTitleKeys.length - 1;
@@ -161,7 +159,8 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
   void _openCreateGoalFromProblem(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => CreateGoalScreen(initialDescription: _badController.text.trim()),
+        builder: (_) =>
+            CreateGoalScreen(initialDescription: _badController.text.trim()),
       ),
     );
   }
@@ -187,8 +186,15 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
                 child: Container(
                   width: 96,
                   height: 96,
-                  decoration: BoxDecoration(color: Colors.green.shade600, shape: BoxShape.circle),
-                  child: const Icon(Icons.check_rounded, color: Colors.white, size: 52),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade600,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check_rounded,
+                    color: Colors.white,
+                    size: 52,
+                  ),
                 ),
               );
             },
@@ -211,25 +217,12 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
 
   Future<void> _save(BuildContext context) async {
     if (!_canSave) return;
-    final sparringLog = _showSparringLog &&
-            (_rounds != null ||
-                _partnerLevels.isNotEmpty ||
-                _submissionsFor > 0 ||
-                _submissionsAgainst > 0 ||
-                _takedownsFor > 0 ||
-                _takedownsAgainst > 0 ||
-                _strikesFor > 0 ||
-                _strikesAgainst > 0)
+    final sparringLog =
+        _showSparringLog && (_rounds != null || _partnerLevels.isNotEmpty)
         ? SparringLog(
             rounds: _rounds,
             roundLengthMinutes: _roundLengthMinutes,
             partnerLevels: _partnerLevels.toList(),
-            submissionsFor: _submissionsFor,
-            submissionsAgainst: _submissionsAgainst,
-            takedownsFor: _takedownsFor,
-            takedownsAgainst: _takedownsAgainst,
-            significantStrikesFor: _strikesFor,
-            significantStrikesAgainst: _strikesAgainst,
           )
         : null;
 
@@ -252,9 +245,13 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
       sleepQuality: _sleepQuality == 0 ? null : _sleepQuality,
       painEntries: _painEnabled ? _painEntries : const [],
       techniquesPracticed: _techniquesPracticed,
-      techniqueSuccessRating: _techniqueSuccessRating == 0 ? null : _techniqueSuccessRating,
+      techniqueSuccessRating: _techniqueSuccessRating == 0
+          ? null
+          : _techniqueSuccessRating,
       sparringLog: sparringLog,
-      keyTakeaway: _keyTakeawayController.text.trim().isEmpty ? null : _keyTakeawayController.text.trim(),
+      keyTakeaway: _keyTakeawayController.text.trim().isEmpty
+          ? null
+          : _keyTakeawayController.text.trim(),
     );
     await _showSavedCheckmark(context);
     if (context.mounted) Navigator.of(context).pop();
@@ -275,7 +272,11 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
     );
   }
 
-  Widget _textField(TextEditingController controller, {VoidCallback? onChanged, String? hintText}) {
+  Widget _textField(
+    TextEditingController controller, {
+    VoidCallback? onChanged,
+    String? hintText,
+  }) {
     return TextField(
       controller: controller,
       maxLines: 3,
@@ -287,7 +288,10 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
         fillColor: const Color(0xFF1C1C1E),
         hintText: hintText,
         hintStyle: TextStyle(color: Colors.grey.shade600),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
+        ),
         contentPadding: const EdgeInsets.all(14),
       ),
     );
@@ -300,22 +304,46 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: onTap,
-        child: Padding(padding: const EdgeInsets.all(8), child: Icon(icon, size: 18, color: Colors.white)),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Icon(icon, size: 18, color: Colors.white),
+        ),
       ),
     );
   }
 
-  Widget _counterField(String label, int value, ValueChanged<int> onChanged, {int min = 0, int max = 99}) {
+  Widget _counterField(
+    String label,
+    int value,
+    ValueChanged<int> onChanged, {
+    int min = 0,
+    int max = 99,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Expanded(child: Text(label, style: const TextStyle(color: Colors.white, fontSize: 13))),
-          _stepButton(Icons.remove, () => onChanged((value - 1).clamp(min, max))),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(color: Colors.white, fontSize: 13),
+            ),
+          ),
+          _stepButton(
+            Icons.remove,
+            () => onChanged((value - 1).clamp(min, max)),
+          ),
           SizedBox(
             width: 36,
             child: Center(
-              child: Text('$value', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
+              child: Text(
+                '$value',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                ),
+              ),
             ),
           ),
           _stepButton(Icons.add, () => onChanged((value + 1).clamp(min, max))),
@@ -352,8 +380,15 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
                   Chip(
                     label: Text(tag),
                     backgroundColor: const Color(0xFF1C1C1E),
-                    labelStyle: const TextStyle(color: Colors.white, fontSize: 13),
-                    deleteIcon: const Icon(Icons.close, size: 16, color: Colors.white54),
+                    labelStyle: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                    ),
+                    deleteIcon: const Icon(
+                      Icons.close,
+                      size: 16,
+                      color: Colors.white54,
+                    ),
                     onDeleted: () => setState(() => tags.remove(tag)),
                   ),
               ],
@@ -371,8 +406,14 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
                   fillColor: const Color(0xFF1C1C1E),
                   hintText: hintText,
                   hintStyle: TextStyle(color: Colors.grey.shade600),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                 ),
               ),
             ),
@@ -393,14 +434,21 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
       borderRadius: BorderRadius.circular(14),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        decoration: BoxDecoration(color: const Color(0xFF1C1C1E), borderRadius: BorderRadius.circular(14)),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1C1C1E),
+          borderRadius: BorderRadius.circular(14),
+        ),
         child: Row(
           children: [
             Icon(Icons.calendar_today, size: 18, color: primary),
             const SizedBox(width: 10),
             Text(
               '${_date.day}.${_date.month}.${_date.year}',
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
             ),
             const Spacer(),
             const Icon(Icons.chevron_right, color: Colors.white38),
@@ -410,17 +458,30 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
     );
   }
 
+  /// Cardio, Krafttraining, Sparring & Technik werden bei "Trainingsart" im
+  /// Wizard ausgeblendet: Trainingsart dient hier nur noch zur Auswahl der
+  /// Sportart (Boxen, Muay Thai, ...), was Sparring/Technik-Drilling war,
+  /// steht schon weiter unten bei Session-Typ. Kraft/Cardio wird separat
+  /// (Strength-Screen/Timer) getrackt.
+  static const _hiddenTrainingTypes = {
+    TrainingType.cardio,
+    TrainingType.strength,
+    TrainingType.sparring,
+    TrainingType.technique,
+  };
+
   Widget _buildTrainingTypeChips(AppStrings s) {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       children: [
         for (final type in TrainingType.values)
-          ChoiceChip(
-            label: Text(s(_typeLabelKeys[type]!)),
-            selected: _trainingType == type,
-            onSelected: (_) => setState(() => _trainingType = type),
-          ),
+          if (!_hiddenTrainingTypes.contains(type))
+            ChoiceChip(
+              label: Text(s(_typeLabelKeys[type]!)),
+              selected: _trainingType == type,
+              onSelected: (_) => setState(() => _trainingType = type),
+            ),
       ],
     );
   }
@@ -481,7 +542,10 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
       builder: (dialogContext) {
         return AlertDialog(
           backgroundColor: const Color(0xFF1C1C1E),
-          title: Text(s('durationLabel'), style: const TextStyle(color: Colors.white)),
+          title: Text(
+            s('durationLabel'),
+            style: const TextStyle(color: Colors.white),
+          ),
           content: TextField(
             controller: controller,
             autofocus: true,
@@ -495,7 +559,9 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
               child: Text(s('cancel')),
             ),
             TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(int.tryParse(controller.text.trim())),
+              onPressed: () => Navigator.of(
+                dialogContext,
+              ).pop(int.tryParse(controller.text.trim())),
               child: Text(s('done')),
             ),
           ],
@@ -534,7 +600,11 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
           children: [
             Text(
               _rpe == 0 ? '—' : '$_rpe/10',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: primary),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: primary,
+              ),
             ),
           ],
         ),
@@ -547,7 +617,10 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
           label: '$_rpe',
           onChanged: (value) => setState(() => _rpe = value.round()),
         ),
-        Text(s('rpeHint'), style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+        Text(
+          s('rpeHint'),
+          style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+        ),
       ],
     );
   }
@@ -563,7 +636,10 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
           key: _trainingTypeKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [_sectionLabel(s('trainingTypeLabel')), _buildTrainingTypeChips(s)],
+            children: [
+              _sectionLabel(s('trainingTypeLabel')),
+              _buildTrainingTypeChips(s),
+            ],
           ),
         ),
         const SizedBox(height: 24),
@@ -571,7 +647,10 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
           key: _additionalSportsKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [_sectionLabel(s('additionalSportsLabel')), _buildAdditionalSportsChips(s)],
+            children: [
+              _sectionLabel(s('additionalSportsLabel')),
+              _buildAdditionalSportsChips(s),
+            ],
           ),
         ),
         const SizedBox(height: 24),
@@ -579,7 +658,10 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
           key: _sessionTypeKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [_sectionLabel(s('sessionTypeLabel')), _buildSessionTypeChips(s)],
+            children: [
+              _sectionLabel(s('sessionTypeLabel')),
+              _buildSessionTypeChips(s),
+            ],
           ),
         ),
         const SizedBox(height: 24),
@@ -587,7 +669,10 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
           key: _durationKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [_sectionLabel(s('durationLabel')), _buildDurationChips(context, s)],
+            children: [
+              _sectionLabel(s('durationLabel')),
+              _buildDurationChips(context, s),
+            ],
           ),
         ),
         const SizedBox(height: 24),
@@ -595,7 +680,10 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
           key: _rpeKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [_sectionLabel(s('rpeLabel')), _buildRpeSlider(context, s)],
+            children: [
+              _sectionLabel(s('rpeLabel')),
+              _buildRpeSlider(context, s),
+            ],
           ),
         ),
       ],
@@ -613,7 +701,9 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
       context: context,
       backgroundColor: const Color(0xFF1C1C1E),
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (sheetContext, setSheetState) {
@@ -631,7 +721,11 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
                   children: [
                     Text(
                       s('addPainZone'),
-                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white),
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Wrap(
@@ -642,16 +736,24 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
                           ChoiceChip(
                             label: Text(bodyZoneLabel(zone, s)),
                             selected: selectedZone == zone,
-                            onSelected: (_) => setSheetState(() => selectedZone = zone),
+                            onSelected: (_) =>
+                                setSheetState(() => selectedZone = zone),
                           ),
                       ],
                     ),
                     const SizedBox(height: 20),
-                    Text(s('painIntensityLabel'), style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
+                    Text(
+                      s('painIntensityLabel'),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade400,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     StarRatingInput(
                       rating: intensity,
-                      onChanged: (value) => setSheetState(() => intensity = value),
+                      onChanged: (value) =>
+                          setSheetState(() => intensity = value),
                     ),
                     const SizedBox(height: 16),
                     _textField(noteController),
@@ -660,7 +762,11 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
                       width: double.infinity,
                       child: FilledButton(
                         onPressed: () => Navigator.of(sheetContext).pop(
-                          PainEntry(bodyZone: selectedZone, intensity: intensity, note: noteController.text.trim()),
+                          PainEntry(
+                            bodyZone: selectedZone,
+                            intensity: intensity,
+                            note: noteController.text.trim(),
+                          ),
                         ),
                         child: Text(s('add')),
                       ),
@@ -683,7 +789,10 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
         Row(
           children: [
             Expanded(
-              child: Text(s('painToggleLabel'), style: const TextStyle(color: Colors.white, fontSize: 14)),
+              child: Text(
+                s('painToggleLabel'),
+                style: const TextStyle(color: Colors.white, fontSize: 14),
+              ),
             ),
             Switch(
               value: _painEnabled,
@@ -697,7 +806,10 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
             Container(
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(color: const Color(0xFF1C1C1E), borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1C1C1E),
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Row(
                 children: [
                   Expanded(
@@ -707,7 +819,11 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, size: 18, color: Colors.white54),
+                    icon: const Icon(
+                      Icons.close,
+                      size: 18,
+                      color: Colors.white54,
+                    ),
                     onPressed: () => setState(() => _painEntries.remove(entry)),
                   ),
                 ],
@@ -733,7 +849,10 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _sectionLabel(s('energyLevelLabel')),
-              StarRatingInput(rating: _energyLevelPre, onChanged: (v) => setState(() => _energyLevelPre = v)),
+              StarRatingInput(
+                rating: _energyLevelPre,
+                onChanged: (v) => setState(() => _energyLevelPre = v),
+              ),
             ],
           ),
         ),
@@ -744,7 +863,10 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _sectionLabel(s('focusLevelLabel')),
-              StarRatingInput(rating: _focusLevelPre, onChanged: (v) => setState(() => _focusLevelPre = v)),
+              StarRatingInput(
+                rating: _focusLevelPre,
+                onChanged: (v) => setState(() => _focusLevelPre = v),
+              ),
             ],
           ),
         ),
@@ -755,7 +877,10 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _sectionLabel(s('sleepQualityLabel')),
-              StarRatingInput(rating: _sleepQuality, onChanged: (v) => setState(() => _sleepQuality = v)),
+              StarRatingInput(
+                rating: _sleepQuality,
+                onChanged: (v) => setState(() => _sleepQuality = v),
+              ),
             ],
           ),
         ),
@@ -764,7 +889,10 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
           key: _painKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [_sectionLabel(s('painSectionLabel')), _buildPainSection(context, s)],
+            children: [
+              _sectionLabel(s('painSectionLabel')),
+              _buildPainSection(context, s),
+            ],
           ),
         ),
       ],
@@ -778,10 +906,23 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 8),
-        _counterField(s('roundsLabel'), _rounds ?? 0, (v) => setState(() => _rounds = v), max: 30),
-        _counterField(s('roundLengthLabel'), _roundLengthMinutes ?? 0, (v) => setState(() => _roundLengthMinutes = v), max: 20),
+        _counterField(
+          s('roundsLabel'),
+          _rounds ?? 0,
+          (v) => setState(() => _rounds = v),
+          max: 30,
+        ),
+        _counterField(
+          s('roundLengthLabel'),
+          _roundLengthMinutes ?? 0,
+          (v) => setState(() => _roundLengthMinutes = v),
+          max: 20,
+        ),
         const SizedBox(height: 12),
-        Text(s('partnerLevelLabel'), style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
+        Text(
+          s('partnerLevelLabel'),
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
+        ),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -801,18 +942,6 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
               ),
           ],
         ),
-        const SizedBox(height: 16),
-        Text(s('submissionsLabel'), style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
-        _counterField(s('statFor'), _submissionsFor, (v) => setState(() => _submissionsFor = v)),
-        _counterField(s('statAgainst'), _submissionsAgainst, (v) => setState(() => _submissionsAgainst = v)),
-        const SizedBox(height: 8),
-        Text(s('takedownsLabel'), style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
-        _counterField(s('statFor'), _takedownsFor, (v) => setState(() => _takedownsFor = v)),
-        _counterField(s('statAgainst'), _takedownsAgainst, (v) => setState(() => _takedownsAgainst = v)),
-        const SizedBox(height: 8),
-        Text(s('strikesLabel'), style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
-        _counterField(s('statFor'), _strikesFor, (v) => setState(() => _strikesFor = v)),
-        _counterField(s('statAgainst'), _strikesAgainst, (v) => setState(() => _strikesAgainst = v)),
       ],
     );
   }
@@ -825,7 +954,10 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
           key: _goalKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [_sectionLabel(s('trainingGoalLabel')), _textField(_goalController)],
+            children: [
+              _sectionLabel(s('trainingGoalLabel')),
+              _textField(_goalController),
+            ],
           ),
         ),
         const SizedBox(height: 24),
@@ -863,7 +995,10 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
             key: _sparringKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [_sectionLabel(s('sparringLogLabel')), _buildSparringLogSection(s)],
+              children: [
+                _sectionLabel(s('sparringLogLabel')),
+                _buildSparringLogSection(s),
+              ],
             ),
           ),
         ],
@@ -884,9 +1019,14 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: _mood == value ? primary.withValues(alpha: 0.2) : Colors.transparent,
+                color: _mood == value
+                    ? primary.withValues(alpha: 0.2)
+                    : Colors.transparent,
                 shape: BoxShape.circle,
-                border: Border.all(color: _mood == value ? primary : Colors.transparent, width: 1.5),
+                border: Border.all(
+                  color: _mood == value ? primary : Colors.transparent,
+                  width: 1.5,
+                ),
               ),
               child: Text(emoji, style: const TextStyle(fontSize: 26)),
             ),
@@ -905,7 +1045,10 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _sectionLabel(s('howWasTraining')),
-              StarRatingInput(rating: _rating, onChanged: (r) => setState(() => _rating = r)),
+              StarRatingInput(
+                rating: _rating,
+                onChanged: (r) => setState(() => _rating = r),
+              ),
             ],
           ),
         ),
@@ -916,7 +1059,10 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _sectionLabel(s('keyTakeawayLabel')),
-              _textField(_keyTakeawayController, hintText: s('keyTakeawayHint')),
+              _textField(
+                _keyTakeawayController,
+                hintText: s('keyTakeawayHint'),
+              ),
             ],
           ),
         ),
@@ -925,7 +1071,10 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
           key: _wellKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [_sectionLabel(s('whatWentWellLabel')), _textField(_wellController)],
+            children: [
+              _sectionLabel(s('whatWentWellLabel')),
+              _textField(_wellController),
+            ],
           ),
         ),
         const SizedBox(height: 24),
@@ -953,7 +1102,10 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
           key: _improvementKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [_sectionLabel(s('improvementLabel')), _textField(_improvementController)],
+            children: [
+              _sectionLabel(s('improvementLabel')),
+              _textField(_improvementController),
+            ],
           ),
         ),
         const SizedBox(height: 24),
@@ -961,7 +1113,10 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
           key: _moodKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [_sectionLabel(s('moodLabel')), _buildMoodPicker(context)],
+            children: [
+              _sectionLabel(s('moodLabel')),
+              _buildMoodPicker(context),
+            ],
           ),
         ),
       ],
@@ -971,11 +1126,11 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
   // --- Wizard-Gerüst ---
 
   List<Widget Function(BuildContext, AppStrings)> get _stepBuilders => [
-        _buildSessionStep,
-        _buildCheckInStep,
-        if (_showTechniqueStep) _buildTechniqueStep,
-        _buildReflectionStep,
-      ];
+    _buildSessionStep,
+    _buildCheckInStep,
+    if (_showTechniqueStep) _buildTechniqueStep,
+    _buildReflectionStep,
+  ];
 
   /// Startet die geführte Tour für den aktuell sichtbaren Schritt: geht die
   /// dort tatsächlich angezeigten Felder der Reihe nach durch (Spotlight +
@@ -984,32 +1139,57 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
   void _startStepTour(BuildContext context, AppStrings s) {
     final steps = switch (_stepTitleKeys[_currentStep]) {
       'wizardStepSession' => [
-          CoachTourStep(anchorKey: _trainingTypeKey, message: s('coachTourTrainingType')),
-          CoachTourStep(anchorKey: _additionalSportsKey, message: s('coachTourAdditionalSports')),
-          CoachTourStep(anchorKey: _sessionTypeKey, message: s('coachTourSessionType')),
-          CoachTourStep(anchorKey: _durationKey, message: s('coachTourDuration')),
-          CoachTourStep(anchorKey: _rpeKey, message: s('coachTourRpe')),
-        ],
+        CoachTourStep(
+          anchorKey: _trainingTypeKey,
+          message: s('coachTourTrainingType'),
+        ),
+        CoachTourStep(
+          anchorKey: _additionalSportsKey,
+          message: s('coachTourAdditionalSports'),
+        ),
+        CoachTourStep(
+          anchorKey: _sessionTypeKey,
+          message: s('coachTourSessionType'),
+        ),
+        CoachTourStep(anchorKey: _durationKey, message: s('coachTourDuration')),
+        CoachTourStep(anchorKey: _rpeKey, message: s('coachTourRpe')),
+      ],
       'wizardStepCheckIn' => [
-          CoachTourStep(anchorKey: _energyKey, message: s('coachTourEnergy')),
-          CoachTourStep(anchorKey: _focusKey, message: s('coachTourFocus')),
-          CoachTourStep(anchorKey: _sleepKey, message: s('coachTourSleep')),
-          CoachTourStep(anchorKey: _painKey, message: s('coachTourPain')),
-        ],
+        CoachTourStep(anchorKey: _energyKey, message: s('coachTourEnergy')),
+        CoachTourStep(anchorKey: _focusKey, message: s('coachTourFocus')),
+        CoachTourStep(anchorKey: _sleepKey, message: s('coachTourSleep')),
+        CoachTourStep(anchorKey: _painKey, message: s('coachTourPain')),
+      ],
       'wizardStepTechnique' || 'wizardStepTechniqueOnly' => [
-          CoachTourStep(anchorKey: _goalKey, message: s('coachTipGoal')),
-          CoachTourStep(anchorKey: _techniquesKey, message: s('coachTourTechniques')),
-          CoachTourStep(anchorKey: _successKey, message: s('coachTourSuccessRating')),
-          if (_showSparringLog) CoachTourStep(anchorKey: _sparringKey, message: s('coachTourSparringLog')),
-        ],
+        CoachTourStep(anchorKey: _goalKey, message: s('coachTipGoal')),
+        CoachTourStep(
+          anchorKey: _techniquesKey,
+          message: s('coachTourTechniques'),
+        ),
+        CoachTourStep(
+          anchorKey: _successKey,
+          message: s('coachTourSuccessRating'),
+        ),
+        if (_showSparringLog)
+          CoachTourStep(
+            anchorKey: _sparringKey,
+            message: s('coachTourSparringLog'),
+          ),
+      ],
       'wizardStepReflection' => [
-          CoachTourStep(anchorKey: _ratingKey, message: s('coachTourRating')),
-          CoachTourStep(anchorKey: _keyTakeawayKey, message: s('coachTourKeyTakeaway')),
-          CoachTourStep(anchorKey: _wellKey, message: s('coachTipWentWell')),
-          CoachTourStep(anchorKey: _badKey, message: s('coachTipWentBad')),
-          CoachTourStep(anchorKey: _improvementKey, message: s('coachTourImprovement')),
-          CoachTourStep(anchorKey: _moodKey, message: s('coachTourMood')),
-        ],
+        CoachTourStep(anchorKey: _ratingKey, message: s('coachTourRating')),
+        CoachTourStep(
+          anchorKey: _keyTakeawayKey,
+          message: s('coachTourKeyTakeaway'),
+        ),
+        CoachTourStep(anchorKey: _wellKey, message: s('coachTipWentWell')),
+        CoachTourStep(anchorKey: _badKey, message: s('coachTipWentBad')),
+        CoachTourStep(
+          anchorKey: _improvementKey,
+          message: s('coachTourImprovement'),
+        ),
+        CoachTourStep(anchorKey: _moodKey, message: s('coachTourMood')),
+      ],
       _ => const <CoachTourStep>[],
     };
     showCoachTour(
@@ -1030,7 +1210,11 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
           s('wizardStepIndicator')
               .replaceFirst('{current}', '${_currentStep + 1}')
               .replaceFirst('{total}', '${titles.length}'),
-          style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontWeight: FontWeight.w600),
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey.shade500,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         const SizedBox(height: 6),
         Row(
@@ -1038,7 +1222,9 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
             for (var i = 0; i < titles.length; i++)
               Expanded(
                 child: Container(
-                  margin: EdgeInsets.only(right: i == titles.length - 1 ? 0 : 6),
+                  margin: EdgeInsets.only(
+                    right: i == titles.length - 1 ? 0 : 6,
+                  ),
                   height: 4,
                   decoration: BoxDecoration(
                     color: i <= _currentStep
@@ -1053,7 +1239,11 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
         const SizedBox(height: 8),
         Text(
           s(titles[_currentStep]),
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
         ),
       ],
     );
@@ -1075,7 +1265,11 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
             actions: [
               Padding(
                 padding: const EdgeInsets.only(right: 16),
-                child: Center(child: CoachAvatarIcon(onTap: () => _startStepTour(context, s))),
+                child: Center(
+                  child: CoachAvatarIcon(
+                    onTap: () => _startStepTour(context, s),
+                  ),
+                ),
               ),
             ],
           ),
@@ -1116,10 +1310,15 @@ class _AddTrainingEntryScreenState extends State<AddTrainingEntryScreen> {
                                     setState(() => _currentStep++);
                                   }
                                 },
-                          style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
+                          style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
                           child: Text(
                             isLastStep ? s('saveEntry') : s('wizardNext'),
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ),

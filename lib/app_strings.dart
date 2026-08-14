@@ -45,13 +45,16 @@ const Map<String, Map<String, String>> _translations = {
     'delete': 'Löschen',
     'add': 'Hinzufügen',
     'confirmDeleteTitle': 'Wirklich löschen?',
-    'confirmDeleteMessage': 'Diese Aktion kann nicht rückgängig gemacht werden.',
+    'confirmDeleteMessage':
+        'Diese Aktion kann nicht rückgängig gemacht werden.',
     'entriesTab': 'Einträge',
     'progressTab': 'Verlauf',
-    'notEnoughData': 'Noch nicht genug Daten -- trag deine Maximalkraft an mindestens 2 Trainingstagen ein',
+    'notEnoughData':
+        'Noch nicht genug Daten -- trag deine Maximalkraft an mindestens 2 Trainingstagen ein',
     'newEntry': 'Maximalkraft eintragen',
     'maxWeightKg': 'Maximalgewicht (kg)',
-    'noEntriesYet': 'Noch keine Einträge -- trag nach deiner nächsten Trainingseinheit deine Maximalkraft ein',
+    'noEntriesYet':
+        'Noch keine Einträge -- trag nach deiner nächsten Trainingseinheit deine Maximalkraft ein',
     'lastEntry': 'Zuletzt',
     'weekdayMonday': 'Montag',
     'weekdayTuesday': 'Dienstag',
@@ -71,7 +74,7 @@ const Map<String, Map<String, String>> _translations = {
     'noSessionsPlanned': 'Kein Training geplant',
     'trainingTypeTechnique': 'Technik',
     'trainingTypeSparring': 'Sparring',
-    'trainingTypeBoxing': 'Boxtraining',
+    'trainingTypeBoxing': 'Boxen',
     'trainingTypeMuayThai': 'Muay Thai',
     'trainingTypeKickboxing': 'Kickboxen',
     'trainingTypeMma': 'MMA',
@@ -110,7 +113,8 @@ const Map<String, Map<String, String>> _translations = {
     'statCompletedGoals': 'Abgeschlossen',
     'statStreak': 'Trainingsserie',
     'myGoals': 'Meine aktuellen Ziele',
-    'noGoalsYet': 'Noch keine Ziele -- erstelle eins aus einem Trainingseintrag',
+    'noGoalsYet':
+        'Noch keine Ziele -- erstelle eins aus einem Trainingseintrag',
     'otherGoals': 'Weitere Ziele',
     'todaysFocus': 'Dein Fokus heute',
     'noFocusYet': 'Noch kein Fokus festgelegt.',
@@ -165,26 +169,34 @@ const Map<String, Map<String, String>> _translations = {
     'minutesUnit': 'Min',
     'durationCustom': 'Eigene Dauer',
     'trainingGoalLabel': 'Trainingsziel',
-    'coachTipGoal': 'Was wolltest du heute verbessern? Zum Beispiel deinen Jab oder deine Defense.',
-    'coachTipWentWell': 'Schreib kurz auf, was heute besonders gut funktioniert hat.',
+    'coachTipGoal':
+        'Was wolltest du heute verbessern? Zum Beispiel deinen Jab oder deine Defense.',
+    'coachTipWentWell':
+        'Schreib kurz auf, was heute besonders gut funktioniert hat.',
     'coachTipWentBad':
         'Trag hier ein, was schlecht lief. Sobald du etwas eingibst, kannst du per Button "Ziel daraus erstellen" ein langfristiges Verbesserungsziel daraus machen.',
-    'coachTipDashboard': 'Hier siehst du auf einen Blick, wie oft du trainierst und wie deine Ziele vorankommen.',
+    'coachTipDashboard':
+        'Hier siehst du auf einen Blick, wie oft du trainierst und wie deine Ziele vorankommen.',
     'coachTourFocusSection':
         'Hier siehst du dein aktuelles Fokus-Ziel -- worauf du dich gerade am meisten konzentrieren willst.',
     'coachTourGoalsSection':
         'Hier findest du alle deine aktiven Ziele. Tipp drauf, um Fortschritt einzutragen oder sie zu bearbeiten.',
     'coachTourGoalProblem':
         'Das hast du gerade als Schwäche im Trainingseintrag notiert -- das Ziel hier greift das jetzt konkret auf.',
-    'coachTourGoalTitle': 'Gib deinem Ziel einen kurzen, klaren Titel -- z.B. "Guard verbessern".',
-    'coachTourGoalDescription': 'Beschreib hier genauer, woran du konkret arbeiten willst.',
+    'coachTourGoalTitle':
+        'Gib deinem Ziel einen kurzen, klaren Titel -- z.B. "Guard verbessern".',
+    'coachTourGoalDescription':
+        'Beschreib hier genauer, woran du konkret arbeiten willst.',
     'coachTourGoalCategory':
         'Welchem Bereich lässt sich das Ziel zuordnen? Hilft dir später, deine Ziele zu sortieren.',
     'coachTourGoalPriority':
         'Wie wichtig ist dir das Ziel gerade? Hohe Priorität taucht in deinem Fokus zuerst auf.',
-    'coachPlanIntro1': 'Hey! Hier kannst du deine Trainingswoche im Voraus planen.',
-    'coachPlanIntro2': 'Leg für jeden Tag fest, was du trainieren willst -- bis zu zwei Einheiten pro Tag.',
-    'coachPlanIntro3': 'So behältst du den Überblick und trainierst nicht nach Zufall.',
+    'coachPlanIntro1':
+        'Hey! Hier kannst du deine Trainingswoche im Voraus planen.',
+    'coachPlanIntro2':
+        'Leg für jeden Tag fest, was du trainieren willst -- bis zu zwei Einheiten pro Tag.',
+    'coachPlanIntro3':
+        'So behältst du den Überblick und trainierst nicht nach Zufall.',
     'coachTourNext': 'Weiter',
     'coachTourDone': 'Fertig',
     'coachTourSkip': 'Überspringen',
@@ -194,20 +206,28 @@ const Map<String, Map<String, String>> _translations = {
     'coachTourSessionType':
         'Was für eine Art Training war das? Das entscheidet, welche Felder du gleich noch ausfüllst -- beim Sparring gibt es z.B. ein Rundenprotokoll.',
     'coachTourDuration': 'Wie lange hat die Einheit gedauert?',
-    'coachTourRpe': 'Wie hart hat sich das Training angefühlt -- 1 ist sehr leicht, 10 ist maximal.',
+    'coachTourRpe':
+        'Wie hart hat sich das Training angefühlt -- 1 ist sehr leicht, 10 ist maximal.',
     'coachTourEnergy': 'Wie viel Energie hattest du VOR dem Training?',
     'coachTourFocus': 'Wie fokussiert warst du vor dem Training?',
     'coachTourSleep': 'Wie gut hast du in der letzten Nacht geschlafen?',
     'coachTourPain':
         'Hattest du Schmerzen oder Beschwerden? Das hilft uns, wiederkehrende Probleme früh zu erkennen.',
-    'coachTourTechniques': 'Welche Techniken hast du geübt? Trag sie als kurze Stichworte ein.',
-    'coachTourSuccessRating': 'Wie gut hat die Umsetzung geklappt -- zum Beispiel im Sparring oder am Sandsack?',
-    'coachTourSparringLog': 'Hier trägst du deine Runden ein und was du gelandet bzw. kassiert hast.',
-    'coachTourRating': 'Wie lief das Training insgesamt, auf einer Skala von 1 bis 5 Sternen?',
-    'coachTourKeyTakeaway': 'Was war heute dein wichtigster Erkenntnisgewinn? Ein Satz reicht.',
+    'coachTourTechniques':
+        'Welche Techniken hast du geübt? Trag sie als kurze Stichworte ein.',
+    'coachTourSuccessRating':
+        'Wie gut hat die Umsetzung geklappt -- zum Beispiel im Sparring oder am Sandsack?',
+    'coachTourSparringLog':
+        'Hier trägst du deine Runden ein und was du gelandet bzw. kassiert hast.',
+    'coachTourRating':
+        'Wie lief das Training insgesamt, auf einer Skala von 1 bis 5 Sternen?',
+    'coachTourKeyTakeaway':
+        'Was war heute dein wichtigster Erkenntnisgewinn? Ein Satz reicht.',
     'coachTourMood': 'Wie hast du dich nach dem Training gefühlt?',
-    'coachTourImprovement': 'Was möchtest du dir bis zum nächsten Mal konkret vornehmen zu verbessern?',
-    'coachTourTimerModes': 'Hier wechselst du zwischen Stoppuhr, Timer und Intervall-Timer für dein Rundentraining.',
+    'coachTourImprovement':
+        'Was möchtest du dir bis zum nächsten Mal konkret vornehmen zu verbessern?',
+    'coachTourTimerModes':
+        'Hier wechselst du zwischen Stoppuhr, Timer und Intervall-Timer für dein Rundentraining.',
     'coachTourStrengthIntro':
         'Hier fügst du neue Kraftübungen hinzu. Tippe später eine Übung an, um dein Maximalgewicht einzutragen und deinen Fortschritt zu sehen.',
     'wizardStepSession': 'Session',
@@ -328,10 +348,12 @@ const Map<String, Map<String, String>> _translations = {
     'confirmDeleteMessage': 'This action cannot be undone.',
     'entriesTab': 'Entries',
     'progressTab': 'Progress',
-    'notEnoughData': 'Not enough data yet -- log your max strength on at least 2 training days',
+    'notEnoughData':
+        'Not enough data yet -- log your max strength on at least 2 training days',
     'newEntry': 'Log max strength',
     'maxWeightKg': 'Max weight (kg)',
-    'noEntriesYet': 'No entries yet -- log your max strength after your next training session',
+    'noEntriesYet':
+        'No entries yet -- log your max strength after your next training session',
     'lastEntry': 'Last',
     'weekdayMonday': 'Monday',
     'weekdayTuesday': 'Tuesday',
@@ -351,7 +373,7 @@ const Map<String, Map<String, String>> _translations = {
     'noSessionsPlanned': 'No training planned',
     'trainingTypeTechnique': 'Technique',
     'trainingTypeSparring': 'Sparring',
-    'trainingTypeBoxing': 'Boxing training',
+    'trainingTypeBoxing': 'Boxing',
     'trainingTypeMuayThai': 'Muay Thai',
     'trainingTypeKickboxing': 'Kickboxing',
     'trainingTypeMma': 'MMA',
@@ -445,27 +467,39 @@ const Map<String, Map<String, String>> _translations = {
     'minutesUnit': 'min',
     'durationCustom': 'Custom duration',
     'trainingGoalLabel': 'Training goal',
-    'coachTipGoal': 'What did you want to work on today? Like your jab or your defense.',
+    'coachTipGoal':
+        'What did you want to work on today? Like your jab or your defense.',
     'coachTipWentWell': 'Jot down what worked especially well today.',
     'coachTipWentBad':
         'Note what went badly. Once you type something, the "Create a goal from this" button turns it into a long-term improvement goal.',
-    'coachTipDashboard': "Here's your training at a glance -- how often you train and how your goals are coming along.",
+    'coachTipDashboard':
+        "Here's your training at a glance -- how often you train and how your goals are coming along.",
     'coachTourFocusSection':
         "This shows your current focus goal -- whatever you want to concentrate on most right now.",
-    'coachTourGoalsSection': "Here you'll find all your active goals. Tap one to log progress or edit it.",
-    'coachTourGoalProblem': "This is the weakness you just noted in your training entry -- this goal builds on it directly.",
-    'coachTourGoalTitle': 'Give your goal a short, clear title -- e.g. "Improve guard".',
-    'coachTourGoalDescription': 'Describe in more detail what exactly you want to work on.',
-    'coachTourGoalCategory': 'Which area does this goal belong to? Helps you sort your goals later.',
-    'coachTourGoalPriority': 'How important is this goal right now? High-priority goals show up first in your focus.',
-    'coachPlanIntro1': 'Hey! This is where you plan your training week ahead of time.',
-    'coachPlanIntro2': 'Set what you want to train each day -- up to two sessions per day.',
-    'coachPlanIntro3': "That way you stay on track instead of training at random.",
+    'coachTourGoalsSection':
+        "Here you'll find all your active goals. Tap one to log progress or edit it.",
+    'coachTourGoalProblem':
+        "This is the weakness you just noted in your training entry -- this goal builds on it directly.",
+    'coachTourGoalTitle':
+        'Give your goal a short, clear title -- e.g. "Improve guard".',
+    'coachTourGoalDescription':
+        'Describe in more detail what exactly you want to work on.',
+    'coachTourGoalCategory':
+        'Which area does this goal belong to? Helps you sort your goals later.',
+    'coachTourGoalPriority':
+        'How important is this goal right now? High-priority goals show up first in your focus.',
+    'coachPlanIntro1':
+        'Hey! This is where you plan your training week ahead of time.',
+    'coachPlanIntro2':
+        'Set what you want to train each day -- up to two sessions per day.',
+    'coachPlanIntro3':
+        "That way you stay on track instead of training at random.",
     'coachTourNext': 'Next',
     'coachTourDone': 'Done',
     'coachTourSkip': 'Skip',
     'coachTourTrainingType': 'Pick the discipline you trained today.',
-    'coachTourAdditionalSports': 'Combined multiple styles in one session? Add extra disciplines here.',
+    'coachTourAdditionalSports':
+        'Combined multiple styles in one session? Add extra disciplines here.',
     'coachTourSessionType':
         "What kind of session was it? This decides which fields you'll fill in next -- sparring unlocks a round-by-round log, for example.",
     'coachTourDuration': 'How long did the session last?',
@@ -473,15 +507,23 @@ const Map<String, Map<String, String>> _translations = {
     'coachTourEnergy': 'How much energy did you have BEFORE training?',
     'coachTourFocus': 'How focused were you before training?',
     'coachTourSleep': 'How well did you sleep last night?',
-    'coachTourPain': 'Any pain or discomfort? This helps us spot recurring issues early.',
-    'coachTourTechniques': 'Which techniques did you drill? Add them as short tags.',
-    'coachTourSuccessRating': 'How well did it translate -- in sparring or on the bag, for example?',
-    'coachTourSparringLog': "Here's where you log your rounds and what you landed or took.",
-    'coachTourRating': 'How did the session go overall, on a scale of 1 to 5 stars?',
-    'coachTourKeyTakeaway': "What was today's biggest takeaway? One sentence is enough.",
+    'coachTourPain':
+        'Any pain or discomfort? This helps us spot recurring issues early.',
+    'coachTourTechniques':
+        'Which techniques did you drill? Add them as short tags.',
+    'coachTourSuccessRating':
+        'How well did it translate -- in sparring or on the bag, for example?',
+    'coachTourSparringLog':
+        "Here's where you log your rounds and what you landed or took.",
+    'coachTourRating':
+        'How did the session go overall, on a scale of 1 to 5 stars?',
+    'coachTourKeyTakeaway':
+        "What was today's biggest takeaway? One sentence is enough.",
     'coachTourMood': 'How did you feel after training?',
-    'coachTourImprovement': 'What do you want to specifically work on improving by next time?',
-    'coachTourTimerModes': 'Switch here between stopwatch, timer, and interval timer for your round training.',
+    'coachTourImprovement':
+        'What do you want to specifically work on improving by next time?',
+    'coachTourTimerModes':
+        'Switch here between stopwatch, timer, and interval timer for your round training.',
     'coachTourStrengthIntro':
         'Add new strength exercises here. Later, tap an exercise to log your max weight and track your progress.',
     'wizardStepSession': 'Session',
@@ -564,7 +606,9 @@ class AppStrings {
   const AppStrings(this._map);
 
   factory AppStrings.of(Locale locale) {
-    return AppStrings(_translations[locale.languageCode] ?? _translations['de']!);
+    return AppStrings(
+      _translations[locale.languageCode] ?? _translations['de']!,
+    );
   }
 
   final Map<String, String> _map;

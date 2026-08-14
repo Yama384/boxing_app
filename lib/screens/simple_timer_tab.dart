@@ -114,12 +114,17 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
   // Schrift-Metrik (Ascent/Descent) nicht exakt in der Zeilenmitte und
   // wirken dadurch im Kreis nach oben verschoben.
   static const _timeFontHeight = 1.0;
-  static const _timeStrutStyle = StrutStyle(fontSize: 56, height: 1, forceStrutHeight: true);
+  static const _timeStrutStyle = StrutStyle(
+    fontSize: 56,
+    height: 1,
+    forceStrutHeight: true,
+  );
 
   Widget _buildTimeInput(BuildContext context) {
     final editableColor = Theme.of(context).colorScheme.primary;
     final editStyle = TextStyle(
       fontSize: 56,
+      height: _timeFontHeight,
       fontWeight: _timeFontWeight,
       fontFeatures: _timeFontFeatures,
       color: editableColor,
@@ -135,6 +140,7 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
             keyboardType: TextInputType.number,
             textAlign: TextAlign.center,
             style: editStyle,
+            strutStyle: _timeStrutStyle,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
               LengthLimitingTextInputFormatter(2),
@@ -148,7 +154,7 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 2),
-          child: Text(':', style: editStyle),
+          child: Text(':', style: editStyle, strutStyle: _timeStrutStyle),
         ),
         SizedBox(
           width: 70,
@@ -157,6 +163,7 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
             keyboardType: TextInputType.number,
             textAlign: TextAlign.center,
             style: editStyle,
+            strutStyle: _timeStrutStyle,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
               LengthLimitingTextInputFormatter(2),
@@ -179,7 +186,9 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
       valueListenable: AppSettings.locale,
       builder: (context, locale, _) {
         final s = AppStrings.of(locale);
-        final numberColor = _isFinished ? Colors.red : Theme.of(context).colorScheme.primary;
+        final numberColor = _isFinished
+            ? Colors.red
+            : Theme.of(context).colorScheme.primary;
         return Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
