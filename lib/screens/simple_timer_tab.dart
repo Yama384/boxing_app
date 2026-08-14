@@ -17,8 +17,10 @@ class SimpleTimerTab extends StatefulWidget {
 
 class _SimpleTimerTabState extends State<SimpleTimerTab>
     with SingleTickerProviderStateMixin {
-  final _minutesController = TextEditingController(text: '3');
+  final _minutesController = TextEditingController(text: '03');
   final _secondsController = TextEditingController(text: '00');
+  final _minutesFocus = FocusNode();
+  final _secondsFocus = FocusNode();
   final _audioPlayer = AudioPlayer();
 
   late final AnimationController _ringController = AnimationController(
@@ -38,6 +40,29 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
 
   bool get _isFinished => _hasStarted && _remainingSeconds == 0;
   bool get _canEditTime => !_isRunning && !_hasStarted;
+
+  @override
+  void initState() {
+    super.initState();
+    _minutesFocus.addListener(
+      () => _padOnBlur(_minutesFocus, _minutesController),
+    );
+    _secondsFocus.addListener(
+      () => _padOnBlur(_secondsFocus, _secondsController),
+    );
+  }
+
+  // Zeigt einstellige Eingaben (z.B. "3") beim Verlassen des Felds
+  // zweistellig an ("03") -- passend zur laufenden Anzeige, die über
+  // formatSeconds() immer zweistellig ist.
+  void _padOnBlur(FocusNode node, TextEditingController controller) {
+    if (node.hasFocus) return;
+    if (controller.text.length == 1) {
+      controller.text = controller.text.padLeft(2, '0');
+    } else if (controller.text.isEmpty) {
+      controller.text = '00';
+    }
+  }
 
   void _start() {
     if (_isRunning) return;
@@ -104,6 +129,8 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
     _ringController.dispose();
     _minutesController.dispose();
     _secondsController.dispose();
+    _minutesFocus.dispose();
+    _secondsFocus.dispose();
     _audioPlayer.dispose();
     super.dispose();
   }
@@ -146,6 +173,7 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
           width: fieldWidth,
           child: TextField(
             controller: _minutesController,
+            focusNode: _minutesFocus,
             keyboardType: TextInputType.number,
             textAlign: TextAlign.center,
             style: editStyle,
@@ -169,6 +197,7 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
           width: fieldWidth,
           child: TextField(
             controller: _secondsController,
+            focusNode: _secondsFocus,
             keyboardType: TextInputType.number,
             textAlign: TextAlign.center,
             style: editStyle,

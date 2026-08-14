@@ -29,7 +29,10 @@ class LogbookDashboardTab extends StatelessWidget {
   Widget _statTile(int value, String label) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: const Color(0xFF1C1C1E), borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1C1C1E),
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: AnimatedStatNumber(value: value, label: label),
     );
   }
@@ -51,13 +54,22 @@ class LogbookDashboardTab extends StatelessWidget {
         children: [
           const Text('🔥', style: TextStyle(fontSize: 34)),
           const SizedBox(width: 14),
-          AnimatedStatNumber(value: streak, label: s('statStreak'), color: Colors.orangeAccent),
+          AnimatedStatNumber(
+            value: streak,
+            label: s('statStreak'),
+            color: Colors.orangeAccent,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildStatsGrid(BuildContext context, int entryCount, int activeGoals, int completedGoals) {
+  Widget _buildStatsGrid(
+    BuildContext context,
+    int entryCount,
+    int activeGoals,
+    int completedGoals,
+  ) {
     return Column(
       children: [
         KeyedSubtree(
@@ -69,7 +81,12 @@ class LogbookDashboardTab extends StatelessWidget {
           children: [
             Expanded(child: _statTile(entryCount, s('statEntries'))),
             const SizedBox(width: 12),
-            Expanded(child: _statTile(LogbookData.trainingDaysCount, s('statTrainingDays'))),
+            Expanded(
+              child: _statTile(
+                LogbookData.trainingDaysCount,
+                s('statTrainingDays'),
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 12),
@@ -89,7 +106,10 @@ class LogbookDashboardTab extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(color: const Color(0xFF1C1C1E), borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1C1C1E),
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -99,13 +119,21 @@ class LogbookDashboardTab extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 s('todaysFocus').toUpperCase(),
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, letterSpacing: 1, color: primary),
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1,
+                  color: primary,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 14),
           if (focusGoal == null) ...[
-            Text(s('noFocusYet'), style: TextStyle(color: Colors.grey.shade400)),
+            Text(
+              s('noFocusYet'),
+              style: TextStyle(color: Colors.grey.shade400),
+            ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: () => Navigator.of(context).push(
@@ -117,21 +145,34 @@ class LogbookDashboardTab extends StatelessWidget {
           ] else ...[
             GestureDetector(
               onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => GoalDetailScreen(goal: focusGoal)),
+                MaterialPageRoute(
+                  builder: (_) => GoalDetailScreen(goal: focusGoal),
+                ),
               ),
               child: Text(
                 '🎯 ${focusGoal.title}',
-                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white),
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
               ),
             ),
             if (focusGoal.description.isNotEmpty) ...[
               const SizedBox(height: 10),
               Text(
                 s('todaysTask'),
-                style: TextStyle(fontSize: 11, color: Colors.grey.shade500, fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade500,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: 4),
-              Text(focusGoal.description, style: const TextStyle(color: Colors.white70, fontSize: 14)),
+              Text(
+                focusGoal.description,
+                style: const TextStyle(color: Colors.white70, fontSize: 14),
+              ),
             ],
           ],
         ],
@@ -139,7 +180,10 @@ class LogbookDashboardTab extends StatelessWidget {
     );
   }
 
-  Widget _buildGoalsSection(BuildContext context, List<ImprovementGoal> activeGoals) {
+  Widget _buildGoalsSection(
+    BuildContext context,
+    List<ImprovementGoal> activeGoals,
+  ) {
     final primary = Theme.of(context).colorScheme.primary;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,7 +191,14 @@ class LogbookDashboardTab extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(s('myGoals'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
+            Text(
+              s('myGoals'),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
             InkWell(
               borderRadius: BorderRadius.circular(20),
               onTap: () => Navigator.of(context).push(
@@ -170,7 +221,9 @@ class LogbookDashboardTab extends StatelessWidget {
                   goal: goal,
                   s: s,
                   onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => GoalDetailScreen(goal: goal)),
+                    MaterialPageRoute(
+                      builder: (_) => GoalDetailScreen(goal: goal),
+                    ),
                   ),
                 ),
               ),
@@ -182,7 +235,10 @@ class LogbookDashboardTab extends StatelessWidget {
   /// Pausierte/abgeschlossene Ziele verschwinden sonst nach dem Pausieren
   /// spurlos aus der UI -- ohne diese Sektion gibt es keinen Weg mehr zurück
   /// zum GoalDetailScreen (fortsetzen/löschen/bearbeiten).
-  Widget _buildOtherGoalsSection(BuildContext context, List<ImprovementGoal> otherGoals) {
+  Widget _buildOtherGoalsSection(
+    BuildContext context,
+    List<ImprovementGoal> otherGoals,
+  ) {
     if (otherGoals.isEmpty) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,7 +246,11 @@ class LogbookDashboardTab extends StatelessWidget {
         const SizedBox(height: 24),
         Text(
           s('otherGoals'),
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white),
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
         ),
         const SizedBox(height: 12),
         for (final goal in otherGoals)
@@ -204,7 +264,9 @@ class LogbookDashboardTab extends StatelessWidget {
                   goal: goal,
                   s: s,
                   onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => GoalDetailScreen(goal: goal)),
+                    MaterialPageRoute(
+                      builder: (_) => GoalDetailScreen(goal: goal),
+                    ),
                   ),
                 ),
               ),
@@ -226,7 +288,11 @@ class LogbookDashboardTab extends StatelessWidget {
             Text(
               s('developmentStarts'),
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: Colors.white),
+              style: const TextStyle(
+                fontSize: 19,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -251,16 +317,25 @@ class LogbookDashboardTab extends StatelessWidget {
             if (entries.isEmpty && goals.isEmpty) {
               return _buildEmptyState();
             }
-            final activeGoals = goals.where((g) => g.status == GoalStatus.active).toList()
-              ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-            final otherGoals = goals.where((g) => g.status != GoalStatus.active).toList()
-              ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-            final completedGoals = goals.where((g) => g.status == GoalStatus.completed).length;
+            final activeGoals =
+                goals.where((g) => g.status == GoalStatus.active).toList()
+                  ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+            final otherGoals =
+                goals.where((g) => g.status != GoalStatus.active).toList()
+                  ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+            final completedGoals = goals
+                .where((g) => g.status == GoalStatus.completed)
+                .length;
 
             return ListView(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
               children: [
-                _buildStatsGrid(context, entries.length, activeGoals.length, completedGoals),
+                _buildStatsGrid(
+                  context,
+                  entries.length,
+                  activeGoals.length,
+                  completedGoals,
+                ),
                 const SizedBox(height: 24),
                 KeyedSubtree(
                   key: focusKey,

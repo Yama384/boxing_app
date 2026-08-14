@@ -20,10 +20,14 @@ class IntervalTimerTab extends StatefulWidget {
 class _IntervalTimerTabState extends State<IntervalTimerTab>
     with SingleTickerProviderStateMixin {
   final _roundsController = TextEditingController(text: '3');
-  final _roundMinutesController = TextEditingController(text: '3');
+  final _roundMinutesController = TextEditingController(text: '03');
   final _roundSecondsController = TextEditingController(text: '00');
-  final _pauseMinutesController = TextEditingController(text: '1');
+  final _pauseMinutesController = TextEditingController(text: '01');
   final _pauseSecondsController = TextEditingController(text: '00');
+  final _roundMinutesFocus = FocusNode();
+  final _roundSecondsFocus = FocusNode();
+  final _pauseMinutesFocus = FocusNode();
+  final _pauseSecondsFocus = FocusNode();
   final _audioPlayer = AudioPlayer();
 
   late final AnimationController _ringController;
@@ -52,6 +56,26 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
       duration: const Duration(seconds: 1),
     );
     _ringProgress = Tween<double>(begin: 1, end: 0).animate(_ringController);
+    for (final entry in {
+      _roundMinutesFocus: _roundMinutesController,
+      _roundSecondsFocus: _roundSecondsController,
+      _pauseMinutesFocus: _pauseMinutesController,
+      _pauseSecondsFocus: _pauseSecondsController,
+    }.entries) {
+      entry.key.addListener(() => _padOnBlur(entry.key, entry.value));
+    }
+  }
+
+  // Zeigt einstellige Eingaben (z.B. "3") beim Verlassen des Felds
+  // zweistellig an ("03") -- passend zur laufenden Anzeige. Gilt bewusst
+  // nicht für die Rundenanzahl, die bleibt einstellig zulässig.
+  void _padOnBlur(FocusNode node, TextEditingController controller) {
+    if (node.hasFocus) return;
+    if (controller.text.length == 1) {
+      controller.text = controller.text.padLeft(2, '0');
+    } else if (controller.text.isEmpty) {
+      controller.text = '00';
+    }
   }
 
   void _start() {
@@ -181,6 +205,10 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
     _roundSecondsController.dispose();
     _pauseMinutesController.dispose();
     _pauseSecondsController.dispose();
+    _roundMinutesFocus.dispose();
+    _roundSecondsFocus.dispose();
+    _pauseMinutesFocus.dispose();
+    _pauseSecondsFocus.dispose();
     _audioPlayer.dispose();
     super.dispose();
   }
@@ -209,12 +237,14 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
     Widget numberField(
       TextEditingController controller,
       double width, {
+      FocusNode? focusNode,
       int? maxValue,
     }) {
       return SizedBox(
         width: width,
         child: TextField(
           controller: controller,
+          focusNode: focusNode,
           keyboardType: TextInputType.number,
           textAlign: TextAlign.center,
           style: fieldStyle,
@@ -242,12 +272,21 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            numberField(_roundMinutesController, 70),
+            numberField(
+              _roundMinutesController,
+              70,
+              focusNode: _roundMinutesFocus,
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Text(':', style: fieldStyle),
             ),
-            numberField(_roundSecondsController, 70, maxValue: 59),
+            numberField(
+              _roundSecondsController,
+              70,
+              focusNode: _roundSecondsFocus,
+              maxValue: 59,
+            ),
           ],
         ),
         const SizedBox(height: 24),
@@ -256,12 +295,21 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            numberField(_pauseMinutesController, 70),
+            numberField(
+              _pauseMinutesController,
+              70,
+              focusNode: _pauseMinutesFocus,
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Text(':', style: fieldStyle),
             ),
-            numberField(_pauseSecondsController, 70, maxValue: 59),
+            numberField(
+              _pauseSecondsController,
+              70,
+              focusNode: _pauseSecondsFocus,
+              maxValue: 59,
+            ),
           ],
         ),
       ],
