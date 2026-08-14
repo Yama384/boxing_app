@@ -31,27 +31,59 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
     Exercise current,
   ) async {
     final weightController = TextEditingController();
+    var selectedDate = DateTime.now();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text(s('newEntry')),
-          content: TextField(
-            controller: weightController,
-            autofocus: true,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(labelText: s('maxWeightKg')),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(s('cancel')),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text(s('add')),
-            ),
-          ],
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text(s('newEntry')),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: weightController,
+                    autofocus: true,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: InputDecoration(labelText: s('maxWeightKg')),
+                  ),
+                  const SizedBox(height: 12),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.calendar_today),
+                    title: Text(s('entryDate')),
+                    trailing: Text(_formatDate(selectedDate)),
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: selectedDate,
+                        firstDate: DateTime.now().subtract(
+                          const Duration(days: 365 * 3),
+                        ),
+                        lastDate: DateTime.now(),
+                      );
+                      if (picked != null) {
+                        setDialogState(() => selectedDate = picked);
+                      }
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text(s('cancel')),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: Text(s('add')),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -62,7 +94,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
     if (weight <= 0) return;
     StrengthData.addEntryTo(
       current,
-      SessionEntry(weight: weight, timestamp: DateTime.now()),
+      SessionEntry(weight: weight, timestamp: selectedDate),
     );
   }
 
@@ -262,12 +294,23 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
           touchTooltipData: LineTouchTooltipData(
             getTooltipColor: (_) => color,
             getTooltipItems: (touchedSpots) => touchedSpots.map((spot) {
+              final date = DateTime.fromMillisecondsSinceEpoch(spot.x.round());
               return LineTooltipItem(
-                '${spot.y} kg',
+                '${spot.y} kg\n',
                 const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
+                children: [
+                  TextSpan(
+                    text: _formatDate(date),
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontWeight: FontWeight.normal,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
               );
             }).toList(),
           ),

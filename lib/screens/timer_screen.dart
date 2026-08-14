@@ -34,21 +34,27 @@ class _TimerScreenState extends State<TimerScreen> {
     }
   }
 
+  // showCoachTour() wird hier bewusst direkt aufgerufen statt in einem
+  // addPostFrameCallback: _startTour() läuft entweder aus dem Future.delayed
+  // in initState() (der Baum ist da längst gebaut) oder aus einem direkten
+  // Tap auf das Guide-Icon -- letzterer löst selbst kein setState/keinen
+  // neuen Frame aus, wodurch der Callback sonst erst beim nächsten
+  // zufälligen Rebuild feuert (Tour erscheint verzögert oder gar nicht).
   void _startTour() {
     CoachGuide.markSeen(_introId);
     final s = AppStrings.of(AppSettings.locale.value);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      showCoachTour(
-        context,
-        steps: [
-          CoachTourStep(anchorKey: _modeSwitchKey, message: s('coachTourTimerModes')),
-        ],
-        nextLabel: s('coachTourNext'),
-        doneLabel: s('coachTourDone'),
-        skipLabel: s('coachTourSkip'),
-      );
-    });
+    showCoachTour(
+      context,
+      steps: [
+        CoachTourStep(
+          anchorKey: _modeSwitchKey,
+          message: s('coachTourTimerModes'),
+        ),
+      ],
+      nextLabel: s('coachTourNext'),
+      doneLabel: s('coachTourDone'),
+      skipLabel: s('coachTourSkip'),
+    );
   }
 
   // IndexedStack statt eines Switches: die drei Tabs bleiben beim Umschalten
@@ -59,11 +65,7 @@ class _TimerScreenState extends State<TimerScreen> {
   Widget _buildBody() {
     return IndexedStack(
       index: _mode.index,
-      children: const [
-        StopwatchTab(),
-        SimpleTimerTab(),
-        IntervalTimerTab(),
-      ],
+      children: const [StopwatchTab(), SimpleTimerTab(), IntervalTimerTab()],
     );
   }
 
@@ -72,7 +74,10 @@ class _TimerScreenState extends State<TimerScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Text(
         text,
-        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -98,7 +103,10 @@ class _TimerScreenState extends State<TimerScreen> {
               children: [
                 Expanded(child: _buildBody()),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
                   child: CupertinoSlidingSegmentedControl<_TimerMode>(
                     key: _modeSwitchKey,
                     groupValue: _mode,

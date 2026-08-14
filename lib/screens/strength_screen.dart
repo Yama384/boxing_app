@@ -30,24 +30,30 @@ class _StrengthScreenState extends State<StrengthScreen> {
     }
   }
 
+  // showCoachTour() wird hier bewusst direkt aufgerufen statt in einem
+  // addPostFrameCallback: _startTour() läuft entweder aus dem Future.delayed
+  // in initState() (der Baum ist da längst gebaut) oder aus einem direkten
+  // Tap auf das Guide-Icon -- letzterer löst selbst kein setState/keinen
+  // neuen Frame aus, wodurch der Callback sonst erst beim nächsten
+  // zufälligen Rebuild feuert (Tour erscheint verzögert oder gar nicht).
   void _startTour() {
     CoachGuide.markSeen(_introId);
     final s = AppStrings.of(AppSettings.locale.value);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      showCoachTour(
-        context,
-        steps: [
-          CoachTourStep(anchorKey: _addKey, message: s('coachTourStrengthIntro')),
-        ],
-        nextLabel: s('coachTourNext'),
-        doneLabel: s('coachTourDone'),
-        skipLabel: s('coachTourSkip'),
-      );
-    });
+    showCoachTour(
+      context,
+      steps: [
+        CoachTourStep(anchorKey: _addKey, message: s('coachTourStrengthIntro')),
+      ],
+      nextLabel: s('coachTourNext'),
+      doneLabel: s('coachTourDone'),
+      skipLabel: s('coachTourSkip'),
+    );
   }
 
-  Future<void> _showAddExerciseDialog(BuildContext context, AppStrings s) async {
+  Future<void> _showAddExerciseDialog(
+    BuildContext context,
+    AppStrings s,
+  ) async {
     final controller = TextEditingController();
     final name = await showDialog<String>(
       context: context,
@@ -65,7 +71,8 @@ class _StrengthScreenState extends State<StrengthScreen> {
               child: Text(s('cancel')),
             ),
             FilledButton(
-              onPressed: () => Navigator.of(context).pop(controller.text.trim()),
+              onPressed: () =>
+                  Navigator.of(context).pop(controller.text.trim()),
               child: Text(s('add')),
             ),
           ],
@@ -80,7 +87,8 @@ class _StrengthScreenState extends State<StrengthScreen> {
   String _subtitleFor(Exercise exercise, AppStrings s) {
     if (exercise.entries.isEmpty) return s('noEntriesYet');
     final last = exercise.entries.last;
-    final date = '${last.timestamp.day}.${last.timestamp.month}.${last.timestamp.year}';
+    final date =
+        '${last.timestamp.day}.${last.timestamp.month}.${last.timestamp.year}';
     return '${s('lastEntry')}: ${last.weight} kg ($date)';
   }
 
@@ -134,7 +142,8 @@ class _StrengthScreenState extends State<StrengthScreen> {
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => ExerciseDetailScreen(exercise: exercise),
+                          builder: (_) =>
+                              ExerciseDetailScreen(exercise: exercise),
                         ),
                       ),
                     ),

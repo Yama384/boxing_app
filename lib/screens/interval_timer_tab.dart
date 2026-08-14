@@ -103,11 +103,11 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
         _isRunning = false;
         _isFinished = true;
       });
-      _playAlert();
+      _playAlert(_Phase.round);
       return;
     }
 
-    _playAlert();
+    _playAlert(_phase);
 
     final int nextPhaseDuration;
     if (_phase == _Phase.round) {
@@ -161,9 +161,15 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
     });
   }
 
-  Future<void> _playAlert() async {
+  /// Rundenende (inkl. Trainingsende) läutet die Glocke, Pausenende spielt
+  /// den Buzzer -- unterschiedliche Sounds, damit man ohne hinzuschauen
+  /// hört, ob gerade eine Runde oder eine Pause zu Ende gegangen ist.
+  Future<void> _playAlert(_Phase endingPhase) async {
     if (!AppSettings.soundEnabled.value) return;
-    await _audioPlayer.play(AssetSource('sounds/bell.wav'));
+    final sound = endingPhase == _Phase.round
+        ? 'sounds/bell.wav'
+        : 'sounds/buzzer.wav';
+    await _audioPlayer.play(AssetSource(sound));
   }
 
   @override
@@ -185,14 +191,26 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
   // Schrift-Metrik (Ascent/Descent) nicht exakt in der Zeilenmitte und
   // wirken dadurch im Kreis nach oben verschoben.
   static const _timeFontHeight = 1.0;
-  static const _timeStrutStyle = StrutStyle(fontSize: 56, height: 1, forceStrutHeight: true);
+  static const _timeStrutStyle = StrutStyle(
+    fontSize: 56,
+    height: 1,
+    forceStrutHeight: true,
+  );
 
   Widget _buildSettingsInput(BuildContext context, AppStrings s) {
     final color = Theme.of(context).colorScheme.primary;
     final labelStyle = TextStyle(fontSize: 14, color: Colors.grey.shade400);
-    final fieldStyle = TextStyle(fontSize: 28, fontWeight: FontWeight.w600, color: color);
+    final fieldStyle = TextStyle(
+      fontSize: 28,
+      fontWeight: FontWeight.w600,
+      color: color,
+    );
 
-    Widget numberField(TextEditingController controller, double width, {int? maxValue}) {
+    Widget numberField(
+      TextEditingController controller,
+      double width, {
+      int? maxValue,
+    }) {
       return SizedBox(
         width: width,
         child: TextField(
@@ -205,7 +223,10 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
             LengthLimitingTextInputFormatter(2),
             if (maxValue != null) MaxValueTextInputFormatter(maxValue),
           ],
-          decoration: const InputDecoration(isDense: true, border: UnderlineInputBorder()),
+          decoration: const InputDecoration(
+            isDense: true,
+            border: UnderlineInputBorder(),
+          ),
         ),
       );
     }
@@ -222,7 +243,10 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             numberField(_roundMinutesController, 70),
-            Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: Text(':', style: fieldStyle)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(':', style: fieldStyle),
+            ),
             numberField(_roundSecondsController, 70, maxValue: 59),
           ],
         ),
@@ -233,7 +257,10 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             numberField(_pauseMinutesController, 70),
-            Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: Text(':', style: fieldStyle)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(':', style: fieldStyle),
+            ),
             numberField(_pauseSecondsController, 70, maxValue: 59),
           ],
         ),
@@ -250,7 +277,9 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
         final s = AppStrings.of(locale);
         final numberColor = _isFinished
             ? Colors.red
-            : (isPause ? Colors.blueAccent : Theme.of(context).colorScheme.primary);
+            : (isPause
+                  ? Colors.blueAccent
+                  : Theme.of(context).colorScheme.primary);
         return Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -261,11 +290,15 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
                 Text(
                   _isFinished
                       ? s('trainingDone')
-                      : (isPause ? s('pause') : '${s('round')} $_currentRound / $_totalRounds'),
+                      : (isPause
+                            ? s('pause')
+                            : '${s('round')} $_currentRound / $_totalRounds'),
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
-                    color: isPause ? Colors.blueAccent : Theme.of(context).colorScheme.primary,
+                    color: isPause
+                        ? Colors.blueAccent
+                        : Theme.of(context).colorScheme.primary,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -291,14 +324,13 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   ElevatedButton(
-                    onPressed: _isFinished ? null : (_isRunning ? _pause : _start),
+                    onPressed: _isFinished
+                        ? null
+                        : (_isRunning ? _pause : _start),
                     child: Text(_isRunning ? s('pause') : s('start')),
                   ),
                   const SizedBox(width: 16),
-                  OutlinedButton(
-                    onPressed: _reset,
-                    child: Text(s('reset')),
-                  ),
+                  OutlinedButton(onPressed: _reset, child: Text(s('reset'))),
                 ],
               ),
             ],

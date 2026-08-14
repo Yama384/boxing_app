@@ -129,12 +129,21 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
       fontFeatures: _timeFontFeatures,
       color: editableColor,
     );
+    // Feste Pixelbreiten für die Eingabefelder sind Rätselraten -- die
+    // tatsächliche Breite von "00" hängt vom Font-Rendering des jeweiligen
+    // Geräts ab. Stattdessen die Breite direkt aus dem Style ausmessen und
+    // etwas Puffer für Cursor/Kerning dazugeben.
+    final digitsPainter = TextPainter(
+      text: TextSpan(text: '00', style: editStyle),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    final fieldWidth = digitsPainter.width + 24;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         SizedBox(
-          width: 70,
+          width: fieldWidth,
           child: TextField(
             controller: _minutesController,
             keyboardType: TextInputType.number,
@@ -157,7 +166,7 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
           child: Text(':', style: editStyle, strutStyle: _timeStrutStyle),
         ),
         SizedBox(
-          width: 70,
+          width: fieldWidth,
           child: TextField(
             controller: _secondsController,
             keyboardType: TextInputType.number,

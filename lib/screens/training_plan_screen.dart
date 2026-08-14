@@ -56,23 +56,28 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
     }
   }
 
+  // showCoachTour() wird hier bewusst direkt aufgerufen statt in einem
+  // addPostFrameCallback: _startTour() läuft entweder aus dem Future.delayed
+  // in initState() (der Baum ist da längst gebaut) oder aus einem direkten
+  // Tap auf das Guide-Icon -- letzterer löst selbst kein setState/keinen
+  // neuen Frame aus, wodurch der Callback sonst erst beim nächsten
+  // zufälligen Rebuild feuert (Tour erscheint verzögert oder gar nicht;
+  // auf diesem statischen Screen ohne Tabs/Animationen kam sie so gut wie
+  // nie, weil hier kaum je ein unabhängiger Rebuild passiert).
   void _startTour() {
     CoachGuide.markSeen(_introId);
     final s = AppStrings.of(AppSettings.locale.value);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      showCoachTour(
-        context,
-        steps: [
-          CoachTourStep(anchorKey: _weekKey, message: s('coachPlanIntro1')),
-          CoachTourStep(anchorKey: _weekKey, message: s('coachPlanIntro2')),
-          CoachTourStep(anchorKey: _weekKey, message: s('coachPlanIntro3')),
-        ],
-        nextLabel: s('coachTourNext'),
-        doneLabel: s('coachTourDone'),
-        skipLabel: s('coachTourSkip'),
-      );
-    });
+    showCoachTour(
+      context,
+      steps: [
+        CoachTourStep(anchorKey: _weekKey, message: s('coachPlanIntro1')),
+        CoachTourStep(anchorKey: _weekKey, message: s('coachPlanIntro2')),
+        CoachTourStep(anchorKey: _weekKey, message: s('coachPlanIntro3')),
+      ],
+      nextLabel: s('coachTourNext'),
+      doneLabel: s('coachTourDone'),
+      skipLabel: s('coachTourSkip'),
+    );
   }
 
   Future<void> _deleteSession(

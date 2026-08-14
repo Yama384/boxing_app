@@ -37,24 +37,35 @@ class _LogbookScreenState extends State<LogbookScreen> {
     }
   }
 
+  // showCoachTour() wird hier bewusst direkt aufgerufen statt in einem
+  // addPostFrameCallback: _startTour() läuft entweder aus dem Future.delayed
+  // in initState() (der Baum ist da längst gebaut) oder aus einem direkten
+  // Tap auf das Guide-Icon -- letzterer löst selbst kein setState/keinen
+  // neuen Frame aus, wodurch der Callback sonst erst beim nächsten
+  // zufälligen Rebuild feuert (Tour erscheint verzögert oder gar nicht).
   void _startTour() {
     CoachGuide.markSeen(_introId);
-    if (_view != _LogbookView.dashboard) setState(() => _view = _LogbookView.dashboard);
+    if (_view != _LogbookView.dashboard) {
+      setState(() => _view = _LogbookView.dashboard);
+    }
     final s = AppStrings.of(AppSettings.locale.value);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      showCoachTour(
-        context,
-        steps: [
-          CoachTourStep(anchorKey: _streakKey, message: s('coachTipDashboard')),
-          CoachTourStep(anchorKey: _focusKey, message: s('coachTourFocusSection')),
-          CoachTourStep(anchorKey: _goalsKey, message: s('coachTourGoalsSection')),
-        ],
-        nextLabel: s('coachTourNext'),
-        doneLabel: s('coachTourDone'),
-        skipLabel: s('coachTourSkip'),
-      );
-    });
+    showCoachTour(
+      context,
+      steps: [
+        CoachTourStep(anchorKey: _streakKey, message: s('coachTipDashboard')),
+        CoachTourStep(
+          anchorKey: _focusKey,
+          message: s('coachTourFocusSection'),
+        ),
+        CoachTourStep(
+          anchorKey: _goalsKey,
+          message: s('coachTourGoalsSection'),
+        ),
+      ],
+      nextLabel: s('coachTourNext'),
+      doneLabel: s('coachTourDone'),
+      skipLabel: s('coachTourSkip'),
+    );
   }
 
   // IndexedStack statt eines Switches: Dashboard und Historie bleiben beim
@@ -66,7 +77,12 @@ class _LogbookScreenState extends State<LogbookScreen> {
     return IndexedStack(
       index: _view.index,
       children: [
-        LogbookDashboardTab(s: s, streakKey: _streakKey, focusKey: _focusKey, goalsKey: _goalsKey),
+        LogbookDashboardTab(
+          s: s,
+          streakKey: _streakKey,
+          focusKey: _focusKey,
+          goalsKey: _goalsKey,
+        ),
         LogbookHistoryTab(s: s),
       ],
     );
@@ -77,7 +93,11 @@ class _LogbookScreenState extends State<LogbookScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Text(
         text,
-        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+          fontSize: 13,
+        ),
       ),
     );
   }
@@ -109,14 +129,21 @@ class _LogbookScreenState extends State<LogbookScreen> {
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
                   child: CupertinoSlidingSegmentedControl<_LogbookView>(
                     groupValue: _view,
                     backgroundColor: const Color(0xFF1C1C1E),
                     thumbColor: Theme.of(context).colorScheme.primary,
                     children: {
-                      _LogbookView.dashboard: _segmentLabel(s('logbookDashboardTab')),
-                      _LogbookView.history: _segmentLabel(s('logbookHistoryTab')),
+                      _LogbookView.dashboard: _segmentLabel(
+                        s('logbookDashboardTab'),
+                      ),
+                      _LogbookView.history: _segmentLabel(
+                        s('logbookHistoryTab'),
+                      ),
                     },
                     onValueChanged: (value) {
                       if (value != null) setState(() => _view = value);
