@@ -10,14 +10,15 @@ class StrengthData {
 
   static const _exercisesKey = 'strength_exercises';
 
-  static final ValueNotifier<List<Exercise>> exercises = ValueNotifier<List<Exercise>>([
-    const Exercise(nameKey: 'exerciseBenchPress'),
-    const Exercise(nameKey: 'exerciseSquat'),
-    const Exercise(nameKey: 'exerciseDeadlift'),
-    const Exercise(nameKey: 'exerciseShoulderPress'),
-    const Exercise(nameKey: 'exercisePullUp'),
-    const Exercise(nameKey: 'exerciseRow'),
-  ]);
+  static final ValueNotifier<List<Exercise>> exercises =
+      ValueNotifier<List<Exercise>>([
+        const Exercise(nameKey: 'exerciseBenchPress'),
+        const Exercise(nameKey: 'exerciseSquat'),
+        const Exercise(nameKey: 'exerciseDeadlift'),
+        const Exercise(nameKey: 'exerciseShoulderPress'),
+        const Exercise(nameKey: 'exercisePullUp'),
+        const Exercise(nameKey: 'exerciseRow'),
+      ]);
 
   static bool _loaded = false;
 
@@ -59,13 +60,49 @@ class StrengthData {
   static void removeEntryFrom(Exercise target, SessionEntry entry) {
     exercises.value = [
       for (final exercise in exercises.value)
-        if (identical(exercise, target)) exercise.removeEntry(entry) else exercise,
+        if (identical(exercise, target))
+          exercise.removeEntry(entry)
+        else
+          exercise,
+    ];
+    _persist();
+  }
+
+  /// Ersetzt [oldEntry] durch [newEntry] -- fürs Korrigieren eines falsch
+  /// eingetragenen Gewichts, ohne den Eintrag komplett neu anlegen zu
+  /// müssen (Datum bliebe sonst verloren, wenn man es nicht mehr weiß).
+  static void updateEntryIn(
+    Exercise target,
+    SessionEntry oldEntry,
+    SessionEntry newEntry,
+  ) {
+    exercises.value = [
+      for (final exercise in exercises.value)
+        if (identical(exercise, target))
+          exercise.removeEntry(oldEntry).addEntry(newEntry)
+        else
+          exercise,
     ];
     _persist();
   }
 
   static void removeExercise(Exercise target) {
-    exercises.value = exercises.value.where((e) => !identical(e, target)).toList();
+    exercises.value = exercises.value
+        .where((e) => !identical(e, target))
+        .toList();
+    _persist();
+  }
+
+  /// Nur für selbst angelegte Übungen sinnvoll -- vordefinierte Übungen
+  /// hängen an einem Übersetzungs-Key, nicht an einem Freitext-Namen.
+  static void renameExercise(Exercise target, String newName) {
+    exercises.value = [
+      for (final exercise in exercises.value)
+        if (identical(exercise, target))
+          Exercise(customName: newName, entries: exercise.entries)
+        else
+          exercise,
+    ];
     _persist();
   }
 }

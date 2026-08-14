@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/material.dart';
+import 'achievements_data.dart';
 import 'app_settings.dart';
 import 'coach_guide.dart';
 import 'logbook_data.dart';
@@ -13,6 +14,7 @@ void main() async {
   await StrengthData.load();
   await TrainingPlanData.load();
   await CoachGuide.load();
+  await AchievementsData.load();
   runApp(const MyApp());
 }
 

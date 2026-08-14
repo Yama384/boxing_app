@@ -25,20 +25,28 @@ class ExerciseDetailScreen extends StatefulWidget {
 class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
   _DetailTab _tab = _DetailTab.entries;
 
-  Future<void> _showAddEntryDialog(
+  /// Zeigt denselben Dialog fürs Hinzufügen (`existing == null`) und
+  /// Bearbeiten (`existing` gesetzt) eines Eintrags -- Bearbeiten ersetzt
+  /// nur den Wert/das Datum, statt den alten Eintrag zu löschen und einen
+  /// neuen ohne das ursprüngliche Datum anzulegen.
+  Future<void> _showEntryDialog(
     BuildContext context,
     AppStrings s,
-    Exercise current,
-  ) async {
-    final weightController = TextEditingController();
-    var selectedDate = DateTime.now();
+    Exercise current, {
+    SessionEntry? existing,
+  }) async {
+    final weightController = TextEditingController(
+      text: existing != null ? _formatWeight(existing.weight) : '',
+    );
+    var selectedDate = existing?.timestamp ?? DateTime.now();
+    String? error;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: Text(s('newEntry')),
+              title: Text(existing != null ? s('editEntry') : s('newEntry')),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -48,7 +56,10 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
-                    decoration: InputDecoration(labelText: s('maxWeightKg')),
+                    decoration: InputDecoration(
+                      labelText: s('maxWeightKg'),
+                      errorText: error,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   ListTile(
@@ -78,8 +89,17 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                   child: Text(s('cancel')),
                 ),
                 FilledButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: Text(s('add')),
+                  onPressed: () {
+                    final weight = double.tryParse(
+                      weightController.text.replaceAll(',', '.'),
+                    );
+                    if (weight == null || weight <= 0) {
+                      setDialogState(() => error = s('weightInputError'));
+                      return;
+                    }
+                    Navigator.of(context).pop(true);
+                  },
+                  child: Text(existing != null ? s('save') : s('add')),
                 ),
               ],
             );
@@ -89,17 +109,23 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
     );
 
     if (confirmed != true) return;
-    final weight =
-        double.tryParse(weightController.text.replaceAll(',', '.')) ?? 0;
-    if (weight <= 0) return;
-    StrengthData.addEntryTo(
-      current,
-      SessionEntry(weight: weight, timestamp: selectedDate),
-    );
+    final weight = double.parse(weightController.text.replaceAll(',', '.'));
+    final entry = SessionEntry(weight: weight, timestamp: selectedDate);
+    if (existing != null) {
+      StrengthData.updateEntryIn(current, existing, entry);
+    } else {
+      StrengthData.addEntryTo(current, entry);
+    }
   }
 
   String _formatDate(DateTime timestamp) {
     return '${timestamp.day}.${timestamp.month}.${timestamp.year}';
+  }
+
+  String _formatWeight(double weight) {
+    return weight == weight.truncateToDouble()
+        ? weight.toStringAsFixed(0)
+        : weight.toString();
   }
 
   void _deleteEntry(Exercise current, SessionEntry entry) {
@@ -125,10 +151,20 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
     }
     final sorted = [...current.entries]
       ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    final maxWeight = current.entries
+        .map((e) => e.weight)
+        .reduce((a, b) => a > b ? a : b);
     return ListView.builder(
       itemCount: sorted.length,
       itemBuilder: (context, index) {
         final entry = sorted[index];
+        final isPr = entry.weight == maxWeight;
+        // sorted ist absteigend nach Datum -- der chronologisch vorherige
+        // Eintrag steht also einen Index weiter unten in der Liste.
+        final previous = index + 1 < sorted.length ? sorted[index + 1] : null;
+        final trendUp = previous == null || previous.weight == entry.weight
+            ? null
+            : entry.weight > previous.weight;
         return Dismissible(
           key: ObjectKey(entry),
           direction: DismissDirection.endToStart,
@@ -141,8 +177,47 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
           confirmDismiss: (_) => confirmDelete(context, s),
           onDismissed: (_) => _deleteEntry(current, entry),
           child: ListTile(
-            leading: const Icon(Icons.emoji_events_outlined),
-            title: Text('${entry.weight} kg'),
+            onTap: () => _showEntryDialog(context, s, current, existing: entry),
+            leading: Icon(
+              isPr ? Icons.emoji_events : Icons.emoji_events_outlined,
+              color: isPr ? Colors.amber : null,
+            ),
+            title: Row(
+              children: [
+                Text('${_formatWeight(entry.weight)} kg'),
+                if (trendUp != null) ...[
+                  const SizedBox(width: 6),
+                  Icon(
+                    trendUp
+                        ? Icons.arrow_upward_rounded
+                        : Icons.arrow_downward_rounded,
+                    size: 14,
+                    color: trendUp ? Colors.greenAccent : Colors.redAccent,
+                  ),
+                ],
+                if (isPr) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      s('personalRecord'),
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.amber,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
             subtitle: Text(_formatDate(entry.timestamp)),
           ),
         );
@@ -265,9 +340,9 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 40,
+              reservedSize: 46,
               getTitlesWidget: (value, meta) => Text(
-                '${value.round()}',
+                '${value.round()} kg',
                 style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
               ),
             ),
@@ -372,7 +447,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
             return Scaffold(
               appBar: AppBar(title: Text(current.displayName(s))),
               floatingActionButton: FloatingActionButton.extended(
-                onPressed: () => _showAddEntryDialog(context, s, current),
+                onPressed: () => _showEntryDialog(context, s, current),
                 icon: const Icon(Icons.add),
                 label: Text(s('newEntry')),
               ),

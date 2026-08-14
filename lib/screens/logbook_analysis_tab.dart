@@ -2,8 +2,10 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import '../app_strings.dart';
 import '../logbook_data.dart';
+import '../models/improvement_goal.dart';
 import '../models/pain_entry.dart';
 import '../models/training_entry.dart';
+import '../widgets/body_pain_map.dart';
 
 enum _Range { d7, d30, d90, all }
 
@@ -12,9 +14,23 @@ enum _Range { d7, d30, d90, all }
 /// Trainingsarten und wiederkehrende Schmerzzonen -- alles nur lesend, ohne
 /// eigene Dateneingabe.
 class LogbookAnalysisTab extends StatefulWidget {
-  const LogbookAnalysisTab({super.key, required this.s});
+  const LogbookAnalysisTab({
+    super.key,
+    required this.s,
+    this.recordsKey,
+    this.radarKey,
+    this.rangeKey,
+    this.painKey,
+  });
 
   final AppStrings s;
+
+  /// Anker für die Logbuch-Guide-Tour (siehe logbook_screen.dart) -- optional,
+  /// damit dieses Widget auch ohne Tour-Anbindung nutzbar bleibt.
+  final GlobalKey? recordsKey;
+  final GlobalKey? radarKey;
+  final GlobalKey? rangeKey;
+  final GlobalKey? painKey;
 
   @override
   State<LogbookAnalysisTab> createState() => _LogbookAnalysisTabState();
@@ -77,6 +93,28 @@ class _LogbookAnalysisTabState extends State<LogbookAnalysisTab> {
     final list = values.toList();
     if (list.isEmpty) return null;
     return list.reduce((a, b) => a + b) / list.length;
+  }
+
+  DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
+
+  ({int sessions, double? avgRating, int minutes}) _windowStats(
+    List<TrainingEntry> all,
+    DateTime start,
+    DateTime end,
+  ) {
+    final inWindow = all.where((e) {
+      final d = _dateOnly(e.date);
+      return !d.isBefore(start) && !d.isAfter(end);
+    }).toList();
+    final minutes = inWindow.fold<int>(
+      0,
+      (sum, e) => sum + (e.durationMinutes ?? 0),
+    );
+    return (
+      sessions: inWindow.length,
+      avgRating: _avg(inWindow.map((e) => e.rating)),
+      minutes: minutes,
+    );
   }
 
   Widget _sectionLabel(String text) {
@@ -440,6 +478,240 @@ class _LogbookAnalysisTabState extends State<LogbookAnalysisTab> {
     );
   }
 
+  Widget _recapTile(String value, String label, num? current, num? previous) {
+    Widget? trend;
+    if (current != null && previous != null && current != previous) {
+      trend = Icon(
+        current > previous
+            ? Icons.arrow_upward_rounded
+            : Icons.arrow_downward_rounded,
+        size: 14,
+        color: current > previous ? Colors.greenAccent : Colors.redAccent,
+      );
+    }
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+              if (trend != null) ...[const SizedBox(width: 4), trend],
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Vergleicht die letzten 7 Tage (inkl. heute) mit den 7 Tagen davor --
+  /// rollierendes Fenster statt Kalenderwoche, damit es unabhängig vom
+  /// Wochentag sofort nützlich ist.
+  Widget _weekRecapCard(AppStrings s, List<TrainingEntry> allEntries) {
+    final today = _dateOnly(DateTime.now());
+    final thisWeekStart = today.subtract(const Duration(days: 6));
+    final lastWeekEnd = thisWeekStart.subtract(const Duration(days: 1));
+    final lastWeekStart = lastWeekEnd.subtract(const Duration(days: 6));
+
+    final thisWeek = _windowStats(allEntries, thisWeekStart, today);
+    final lastWeek = _windowStats(allEntries, lastWeekStart, lastWeekEnd);
+
+    return _card(
+      title: s('analysisWeekRecap'),
+      child: Row(
+        children: [
+          Expanded(
+            child: _recapTile(
+              '${thisWeek.sessions}',
+              s('analysisWeekSessions'),
+              thisWeek.sessions,
+              lastWeek.sessions,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _recapTile(
+              thisWeek.avgRating == null
+                  ? '--'
+                  : thisWeek.avgRating!.toStringAsFixed(1),
+              s('analysisWeekAvgRating'),
+              thisWeek.avgRating,
+              lastWeek.avgRating,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _recapTile(
+              '${thisWeek.minutes}',
+              s('analysisWeekMinutes'),
+              thisWeek.minutes,
+              lastWeek.minutes,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Persönliche Bestleistungen über die gesamte Historie (unabhängig vom
+  /// Zeitraum-Filter darunter, der nur die Trend-Charts betrifft).
+  Widget _recordsCard(AppStrings s, List<TrainingEntry> allEntries) {
+    final longestStreak = LogbookData.longestStreak;
+    final totalHours =
+        allEntries.fold<int>(0, (sum, e) => sum + (e.durationMinutes ?? 0)) /
+        60;
+
+    var bestWeekCount = 0;
+    for (final anchor in allEntries) {
+      final start = _dateOnly(anchor.date);
+      final end = start.add(const Duration(days: 6));
+      final count = allEntries.where((e) {
+        final d = _dateOnly(e.date);
+        return !d.isBefore(start) && !d.isAfter(end);
+      }).length;
+      if (count > bestWeekCount) bestWeekCount = count;
+    }
+
+    final byMonth = <String, List<int>>{};
+    for (final e in allEntries) {
+      byMonth
+          .putIfAbsent('${e.date.year}-${e.date.month}', () => [])
+          .add(e.rating);
+    }
+    String? bestMonthLabel;
+    var bestMonthAvg = 0.0;
+    for (final entry in byMonth.entries) {
+      if (entry.value.length < 2) continue;
+      final avg = entry.value.reduce((a, b) => a + b) / entry.value.length;
+      if (bestMonthLabel == null || avg > bestMonthAvg) {
+        bestMonthAvg = avg;
+        final parts = entry.key.split('-');
+        bestMonthLabel = '${parts[1].padLeft(2, '0')}/${parts[0]}';
+      }
+    }
+
+    return _card(
+      title: s('analysisRecords'),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _statTile(
+                  '$longestStreak',
+                  s('analysisRecordLongestStreak'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _statTile('$bestWeekCount', s('analysisRecordBestWeek')),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _statTile(
+                  bestMonthLabel == null
+                      ? '--'
+                      : '$bestMonthLabel (${bestMonthAvg.toStringAsFixed(1)})',
+                  s('analysisRecordBestRatingMonth'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _statTile(
+                  totalHours.toStringAsFixed(1),
+                  s('analysisRecordTotalHours'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Techniken, die früher regelmäßig geübt wurden (mind. 2x), aber seit
+  /// über 2 Wochen nicht mehr auftauchen -- macht "einrosten" sichtbar,
+  /// bevor man es im Sparring schmerzhaft merkt.
+  Widget? _staleTechniquesCard(AppStrings s, List<TrainingEntry> allEntries) {
+    final lastPracticed = <String, DateTime>{};
+    final practiceCounts = <String, int>{};
+    for (final e in allEntries) {
+      for (final raw in e.techniquesPracticed) {
+        final key = raw.trim();
+        if (key.isEmpty) continue;
+        practiceCounts[key] = (practiceCounts[key] ?? 0) + 1;
+        final existing = lastPracticed[key];
+        if (existing == null || e.date.isAfter(existing)) {
+          lastPracticed[key] = e.date;
+        }
+      }
+    }
+    final cutoff = DateTime.now().subtract(const Duration(days: 14));
+    final stale =
+        lastPracticed.entries
+            .where(
+              (entry) =>
+                  (practiceCounts[entry.key] ?? 0) >= 2 &&
+                  entry.value.isBefore(cutoff),
+            )
+            .toList()
+          ..sort((a, b) => a.value.compareTo(b.value));
+
+    if (stale.isEmpty) return null;
+
+    return _card(
+      title: s('analysisStaleTechniques'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            s('analysisStaleTechniquesHint'),
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final entry in stale.take(6))
+                Chip(
+                  label: Text(entry.key),
+                  backgroundColor: const Color(0xFF2A2A2C),
+                  labelStyle: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                  ),
+                  side: BorderSide.none,
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _painZones(AppStrings s, List<TrainingEntry> entries) {
     final counts = <BodyZone, int>{};
     for (final e in entries) {
@@ -452,6 +724,10 @@ class _LogbookAnalysisTabState extends State<LogbookAnalysisTab> {
     final maxCount = sorted.first.value;
     return Column(
       children: [
+        // Körper-Karte fürs schnelle Erfassen, Balkenliste darunter für die
+        // genauen Zahlen -- Ergänzung, kein Ersatz.
+        BodyPainMap(counts: counts, s: s),
+        const SizedBox(height: 16),
         for (final entry in sorted)
           _proportionBar(
             '🩹',
@@ -461,6 +737,95 @@ class _LogbookAnalysisTabState extends State<LogbookAnalysisTab> {
             Colors.redAccent,
           ),
       ],
+    );
+  }
+
+  /// Ø-Fortschritt je [SkillArea] über alle Ziele dieser Kategorie -- nutzt
+  /// das bestehende Ziel-Fortschritt-Modell 1:1, keine neue Metrik. Eine
+  /// unsichtbare "Anker"-Datenreihe fixiert die Skala immer auf 0-100,
+  /// sonst würde fl_chart automatisch auf den aktuell höchsten Wert
+  /// skalieren und die Form wäre über die Zeit nicht vergleichbar.
+  Widget _skillRadarChart(
+    AppStrings s,
+    List<ImprovementGoal> goals,
+    Color primary,
+  ) {
+    if (goals.isEmpty) {
+      return SizedBox(
+        height: 100,
+        child: Center(
+          child: Text(
+            s('skillRadarEmptyHint'),
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+          ),
+        ),
+      );
+    }
+
+    final byArea = <SkillArea, List<int>>{};
+    for (final g in goals) {
+      byArea.putIfAbsent(g.category, () => []).add(g.progress);
+    }
+    final values = [
+      for (final area in SkillArea.values)
+        if (byArea[area] case final progresses? when progresses.isNotEmpty)
+          progresses.reduce((a, b) => a + b) / progresses.length
+        else
+          0.0,
+    ];
+
+    return SizedBox(
+      height: 220,
+      child: RadarChart(
+        RadarChartData(
+          radarBackgroundColor: Colors.transparent,
+          radarBorderData: BorderSide(
+            color: Colors.white.withValues(alpha: 0.1),
+          ),
+          tickBorderData: BorderSide(
+            color: Colors.white.withValues(alpha: 0.08),
+          ),
+          gridBorderData: BorderSide(
+            color: Colors.white.withValues(alpha: 0.08),
+          ),
+          tickCount: 4,
+          ticksTextStyle: TextStyle(fontSize: 9, color: Colors.grey.shade600),
+          titlePositionPercentageOffset: 0.22,
+          titleTextStyle: const TextStyle(
+            fontSize: 11,
+            color: Colors.white70,
+            fontWeight: FontWeight.w600,
+          ),
+          getTitle: (index, angle) {
+            final area = SkillArea.values[index];
+            return RadarChartTitle(
+              text: '${skillAreaEmoji(area)} ${skillAreaLabel(area, s)}',
+              angle: angle,
+            );
+          },
+          dataSets: [
+            // Unsichtbarer Skalen-Anker, siehe Doc-Kommentar oben.
+            RadarDataSet(
+              dataEntries: List.generate(
+                SkillArea.values.length,
+                (_) => const RadarEntry(value: 100),
+              ),
+              fillColor: Colors.transparent,
+              borderColor: Colors.transparent,
+              borderWidth: 0,
+              entryRadius: 0,
+            ),
+            RadarDataSet(
+              dataEntries: [for (final v in values) RadarEntry(value: v)],
+              fillColor: primary.withValues(alpha: 0.25),
+              borderColor: primary,
+              borderWidth: 2,
+              entryRadius: 3,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -504,76 +869,107 @@ class _LogbookAnalysisTabState extends State<LogbookAnalysisTab> {
         final entries = _inRange(allEntries)
           ..sort((a, b) => a.date.compareTo(b.date));
         final primary = Theme.of(context).colorScheme.primary;
+        final staleCard = _staleTechniquesCard(widget.s, allEntries);
 
-        return ListView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
-          children: [
-            _rangeChips(widget.s),
-            const SizedBox(height: 20),
-            if (entries.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 40),
-                child: Center(
-                  child: Text(
-                    widget.s('analysisNoDataInRange'),
-                    style: TextStyle(color: Colors.grey.shade500),
+        return ValueListenableBuilder<List<ImprovementGoal>>(
+          valueListenable: LogbookData.goals,
+          builder: (context, goals, _) {
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
+              children: [
+                _weekRecapCard(widget.s, allEntries),
+                const SizedBox(height: 16),
+                KeyedSubtree(
+                  key: widget.recordsKey,
+                  child: _recordsCard(widget.s, allEntries),
+                ),
+                if (staleCard != null) ...[
+                  const SizedBox(height: 16),
+                  staleCard,
+                ],
+                const SizedBox(height: 16),
+                KeyedSubtree(
+                  key: widget.radarKey,
+                  child: _card(
+                    title: widget.s('skillRadarTitle'),
+                    child: _skillRadarChart(widget.s, goals, primary),
                   ),
                 ),
-              )
-            else ...[
-              _statsGrid(widget.s, entries),
-              const SizedBox(height: 16),
-              _card(
-                title: widget.s('analysisRatingTrend'),
-                child: _trendChart(
-                  widget.s,
-                  entries: entries,
-                  valueOf: (e) => e.rating.toDouble(),
-                  minY: 0.5,
-                  maxY: 5.5,
-                  color: Colors.amber,
+                const SizedBox(height: 24),
+                KeyedSubtree(
+                  key: widget.rangeKey,
+                  child: _rangeChips(widget.s),
                 ),
-              ),
-              const SizedBox(height: 16),
-              _card(
-                title: widget.s('analysisIntensityTrend'),
-                child: _trendChart(
-                  widget.s,
-                  entries: entries,
-                  valueOf: (e) => _intensityValue(e.intensity).toDouble(),
-                  minY: 0.5,
-                  maxY: 4.5,
-                  color: primary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              _card(
-                title: widget.s('analysisTypeDistribution'),
-                child: _typeDistribution(widget.s, entries, primary),
-              ),
-              if (entries.any((e) => e.techniqueSuccessRating != null)) ...[
-                const SizedBox(height: 16),
-                _card(
-                  title: widget.s('analysisTechniqueTrend'),
-                  child: _trendChart(
-                    widget.s,
-                    entries: entries,
-                    valueOf: (e) => e.techniqueSuccessRating?.toDouble(),
-                    minY: 0.5,
-                    maxY: 5.5,
-                    color: Colors.lightBlueAccent,
+                const SizedBox(height: 20),
+                if (entries.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 40),
+                    child: Center(
+                      child: Text(
+                        widget.s('analysisNoDataInRange'),
+                        style: TextStyle(color: Colors.grey.shade500),
+                      ),
+                    ),
+                  )
+                else ...[
+                  _statsGrid(widget.s, entries),
+                  const SizedBox(height: 16),
+                  _card(
+                    title: widget.s('analysisRatingTrend'),
+                    child: _trendChart(
+                      widget.s,
+                      entries: entries,
+                      valueOf: (e) => e.rating.toDouble(),
+                      minY: 0.5,
+                      maxY: 5.5,
+                      color: Colors.amber,
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 16),
+                  _card(
+                    title: widget.s('analysisIntensityTrend'),
+                    child: _trendChart(
+                      widget.s,
+                      entries: entries,
+                      valueOf: (e) => _intensityValue(e.intensity).toDouble(),
+                      minY: 0.5,
+                      maxY: 4.5,
+                      color: primary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _card(
+                    title: widget.s('analysisTypeDistribution'),
+                    child: _typeDistribution(widget.s, entries, primary),
+                  ),
+                  if (entries.any((e) => e.techniqueSuccessRating != null)) ...[
+                    const SizedBox(height: 16),
+                    _card(
+                      title: widget.s('analysisTechniqueTrend'),
+                      child: _trendChart(
+                        widget.s,
+                        entries: entries,
+                        valueOf: (e) => e.techniqueSuccessRating?.toDouble(),
+                        minY: 0.5,
+                        maxY: 5.5,
+                        color: Colors.lightBlueAccent,
+                      ),
+                    ),
+                  ],
+                  if (entries.any((e) => e.painEntries.isNotEmpty)) ...[
+                    const SizedBox(height: 16),
+                    KeyedSubtree(
+                      key: widget.painKey,
+                      child: _card(
+                        title: widget.s('analysisPainZones'),
+                        child: _painZones(widget.s, entries),
+                      ),
+                    ),
+                  ],
+                ],
               ],
-              if (entries.any((e) => e.painEntries.isNotEmpty)) ...[
-                const SizedBox(height: 16),
-                _card(
-                  title: widget.s('analysisPainZones'),
-                  child: _painZones(widget.s, entries),
-                ),
-              ],
-            ],
-          ],
+            );
+          },
         );
       },
     );

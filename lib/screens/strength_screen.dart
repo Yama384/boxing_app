@@ -84,16 +84,91 @@ class _StrengthScreenState extends State<StrengthScreen> {
     }
   }
 
+  /// Nur für selbst angelegte Übungen aufrufbar (siehe onLongPress unten) --
+  /// vordefinierte Übungen hängen an einem Übersetzungs-Key, nicht an einem
+  /// Freitext-Namen, der sich umbenennen ließe.
+  Future<void> _showRenameExerciseDialog(
+    BuildContext context,
+    AppStrings s,
+    Exercise exercise,
+  ) async {
+    final controller = TextEditingController(text: exercise.customName);
+    final name = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(s('renameExercise')),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: InputDecoration(labelText: s('exerciseName')),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(s('cancel')),
+            ),
+            FilledButton(
+              onPressed: () =>
+                  Navigator.of(context).pop(controller.text.trim()),
+              child: Text(s('save')),
+            ),
+          ],
+        );
+      },
+    );
+    if (name != null && name.isNotEmpty) {
+      StrengthData.renameExercise(exercise, name);
+    }
+  }
+
   String _subtitleFor(Exercise exercise, AppStrings s) {
     if (exercise.entries.isEmpty) return s('noEntriesYet');
     final last = exercise.entries.last;
     final date =
         '${last.timestamp.day}.${last.timestamp.month}.${last.timestamp.year}';
-    return '${s('lastEntry')}: ${last.weight} kg ($date)';
+    final maxWeight = exercise.entries
+        .map((e) => e.weight)
+        .reduce((a, b) => a > b ? a : b);
+    final lastLine = '${s('lastEntry')}: ${last.weight} kg ($date)';
+    // Bestleistung nur extra zeigen, wenn sie nicht ohnehin der letzte
+    // Eintrag ist -- sonst wäre es dieselbe Zahl zweimal.
+    if (maxWeight == last.weight) return lastLine;
+    return '$lastLine · ${s('personalRecord')}: $maxWeight kg';
   }
 
   void _deleteExercise(Exercise exercise) {
     StrengthData.removeExercise(exercise);
+  }
+
+  Widget _buildEmptyState(AppStrings s) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.fitness_center, size: 56, color: Colors.grey.shade600),
+            const SizedBox(height: 16),
+            Text(
+              s('noExercisesYet'),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 19,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              s('noExercisesYetSubtitle'),
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade400),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -120,6 +195,7 @@ class _StrengthScreenState extends State<StrengthScreen> {
           body: ValueListenableBuilder<List<Exercise>>(
             valueListenable: StrengthData.exercises,
             builder: (context, exercises, _) {
+              if (exercises.isEmpty) return _buildEmptyState(s);
               return ListView.builder(
                 itemCount: exercises.length,
                 itemBuilder: (context, index) {
@@ -146,6 +222,13 @@ class _StrengthScreenState extends State<StrengthScreen> {
                               ExerciseDetailScreen(exercise: exercise),
                         ),
                       ),
+                      // Nur eigene Übungen haben einen Freitext-Namen, den
+                      // man umbenennen könnte -- vordefinierte sind über
+                      // einen Übersetzungs-Key fest benannt.
+                      onLongPress: exercise.customName == null
+                          ? null
+                          : () =>
+                                _showRenameExerciseDialog(context, s, exercise),
                     ),
                   );
                 },

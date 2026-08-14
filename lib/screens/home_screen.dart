@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../app_settings.dart';
 import '../app_strings.dart';
+import '../logbook_data.dart';
+import '../models/training_entry.dart';
+import 'add_training_entry_screen.dart';
 import 'logbook_screen.dart';
 import 'settings_screen.dart';
 import 'strength_screen.dart';
@@ -9,6 +12,77 @@ import 'training_plan_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+
+  Widget _buildStreakBadge(AppStrings s) {
+    return ValueListenableBuilder<List<TrainingEntry>>(
+      valueListenable: LogbookData.entries,
+      builder: (context, _, _) {
+        final streak = LogbookData.currentStreak;
+        if (streak <= 0) return const SizedBox.shrink();
+        return Container(
+          margin: const EdgeInsets.only(top: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.orangeAccent.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('🔥', style: TextStyle(fontSize: 14)),
+              const SizedBox(width: 6),
+              Text(
+                s('homeStreakBadge').replaceFirst('{n}', '$streak'),
+                style: const TextStyle(
+                  color: Colors.orangeAccent,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildQuickAdd(BuildContext context, AppStrings s) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return Material(
+      color: primary,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const AddTrainingEntryScreen()),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          child: Row(
+            children: [
+              const Icon(Icons.add_circle, color: Colors.white, size: 22),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  s('addTrainingEntry'),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+              const Icon(
+                Icons.arrow_forward_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +116,10 @@ class HomeScreen extends StatelessWidget {
                       color: Colors.grey.shade500,
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  _buildStreakBadge(s),
+                  const SizedBox(height: 24),
+                  _buildQuickAdd(context, s),
+                  const SizedBox(height: 24),
                   Expanded(
                     child: GridView.count(
                       crossAxisCount: 2,
@@ -52,13 +129,17 @@ class HomeScreen extends StatelessWidget {
                         _ModuleCard(
                           icon: Icons.timer,
                           label: s('timer'),
+                          color: Colors.blueAccent,
                           onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const TimerScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const TimerScreen(),
+                            ),
                           ),
                         ),
                         _ModuleCard(
                           icon: Icons.fitness_center,
                           label: s('strength'),
+                          color: Colors.orangeAccent,
                           onTap: () => Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (_) => const StrengthScreen(),
@@ -68,6 +149,7 @@ class HomeScreen extends StatelessWidget {
                         _ModuleCard(
                           icon: Icons.event_note,
                           label: s('trainingPlan'),
+                          color: Colors.purpleAccent,
                           onTap: () => Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (_) => const TrainingPlanScreen(),
@@ -77,15 +159,21 @@ class HomeScreen extends StatelessWidget {
                         _ModuleCard(
                           icon: Icons.menu_book,
                           label: s('logbook'),
+                          color: Theme.of(context).colorScheme.primary,
                           onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const LogbookScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const LogbookScreen(),
+                            ),
                           ),
                         ),
                         _ModuleCard(
                           icon: Icons.settings,
                           label: s('settings'),
+                          color: Colors.grey.shade400,
                           onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const SettingsScreen(),
+                            ),
                           ),
                         ),
                       ],
@@ -102,15 +190,20 @@ class HomeScreen extends StatelessWidget {
 }
 
 class _ModuleCard extends StatelessWidget {
-  const _ModuleCard({required this.icon, required this.label, required this.onTap});
+  const _ModuleCard({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
 
   final IconData icon;
   final String label;
+  final Color color;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
     return Material(
       color: const Color(0xFF1C1C1E),
       borderRadius: BorderRadius.circular(20),
@@ -118,26 +211,25 @@ class _ModuleCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(18),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                icon,
-                size: 44,
-                color: primary,
-                shadows: [
-                  Shadow(color: primary.withValues(alpha: 0.45), blurRadius: 10),
-                  Shadow(color: primary.withValues(alpha: 0.2), blurRadius: 20),
-                ],
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 24, color: color),
               ),
-              const SizedBox(height: 12),
+              const Spacer(),
               Text(
                 label,
-                textAlign: TextAlign.center,
                 style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
                   color: Colors.white,
                 ),
               ),

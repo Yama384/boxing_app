@@ -5,9 +5,19 @@ import '../models/training_entry.dart';
 import '../widgets/confirm_delete_dialog.dart';
 
 class LogbookHistoryTab extends StatefulWidget {
-  const LogbookHistoryTab({super.key, required this.s});
+  const LogbookHistoryTab({
+    super.key,
+    required this.s,
+    this.searchKey,
+    this.filterKey,
+  });
 
   final AppStrings s;
+
+  /// Anker für die Logbuch-Guide-Tour (siehe logbook_screen.dart) -- optional,
+  /// damit dieses Widget auch ohne Tour-Anbindung nutzbar bleibt.
+  final GlobalKey? searchKey;
+  final GlobalKey? filterKey;
 
   @override
   State<LogbookHistoryTab> createState() => _LogbookHistoryTabState();
@@ -40,7 +50,10 @@ class _LogbookHistoryTabState extends State<LogbookHistoryTab> {
   DateTimeRange? _dateRangeFilter;
 
   bool get _hasActiveFilters =>
-      _typeFilter != null || _intensityFilter != null || _ratingFilter != null || _dateRangeFilter != null;
+      _typeFilter != null ||
+      _intensityFilter != null ||
+      _ratingFilter != null ||
+      _dateRangeFilter != null;
 
   void _clearFilters() {
     setState(() {
@@ -104,20 +117,25 @@ class _LogbookHistoryTabState extends State<LogbookHistoryTab> {
   List<TrainingEntry> _filtered(List<TrainingEntry> all) {
     return all.where((e) {
       if (_typeFilter != null && e.trainingType != _typeFilter) return false;
-      if (_intensityFilter != null && e.intensity != _intensityFilter) return false;
+      if (_intensityFilter != null && e.intensity != _intensityFilter) {
+        return false;
+      }
       if (_ratingFilter != null && e.rating != _ratingFilter) return false;
       if (_dateRangeFilter != null) {
         final day = DateTime(e.date.year, e.date.month, e.date.day);
-        if (day.isBefore(_dateRangeFilter!.start) || day.isAfter(_dateRangeFilter!.end)) return false;
+        if (day.isBefore(_dateRangeFilter!.start) ||
+            day.isAfter(_dateRangeFilter!.end)) {
+          return false;
+        }
       }
       final query = _query.trim().toLowerCase();
       if (query.isNotEmpty) {
-        final haystack = '${e.whatWentWell} ${e.whatWentBad} ${e.improvement}'.toLowerCase();
+        final haystack = '${e.whatWentWell} ${e.whatWentBad} ${e.improvement}'
+            .toLowerCase();
         if (!haystack.contains(query)) return false;
       }
       return true;
-    }).toList()
-      ..sort((a, b) => b.date.compareTo(a.date));
+    }).toList()..sort((a, b) => b.date.compareTo(a.date));
   }
 
   Future<void> _pickDateRange(BuildContext context) async {
@@ -140,9 +158,23 @@ class _LogbookHistoryTabState extends State<LogbookHistoryTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontWeight: FontWeight.w700)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade500,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(text, style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.4)),
+          Text(
+            text,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              height: 1.4,
+            ),
+          ),
         ],
       ),
     );
@@ -153,7 +185,9 @@ class _LogbookHistoryTabState extends State<LogbookHistoryTab> {
       context: context,
       backgroundColor: const Color(0xFF1C1C1E),
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) {
         return SafeArea(
           child: SingleChildScrollView(
@@ -164,15 +198,25 @@ class _LogbookHistoryTabState extends State<LogbookHistoryTab> {
               children: [
                 Row(
                   children: [
-                    Text(_typeEmoji(entry.trainingType), style: const TextStyle(fontSize: 22)),
+                    Text(
+                      _typeEmoji(entry.trainingType),
+                      style: const TextStyle(fontSize: 22),
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         widget.s(_typeLabelKeys[entry.trainingType]!),
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
-                    Text(_fmtDate(entry.date), style: TextStyle(color: Colors.grey.shade500)),
+                    Text(
+                      _fmtDate(entry.date),
+                      style: TextStyle(color: Colors.grey.shade500),
+                    ),
                   ],
                 ),
                 if (entry.durationMinutes != null) ...[
@@ -187,21 +231,35 @@ class _LogbookHistoryTabState extends State<LogbookHistoryTab> {
                   children: [
                     for (var i = 1; i <= 5; i++)
                       Icon(
-                        i <= entry.rating ? Icons.star_rounded : Icons.star_outline_rounded,
+                        i <= entry.rating
+                            ? Icons.star_rounded
+                            : Icons.star_outline_rounded,
                         size: 20,
-                        color: i <= entry.rating ? Colors.amber : Colors.grey.shade700,
+                        color: i <= entry.rating
+                            ? Colors.amber
+                            : Colors.grey.shade700,
                       ),
                     const SizedBox(width: 10),
-                    Text(_intensityEmoji(entry.intensity), style: const TextStyle(fontSize: 20)),
+                    Text(
+                      _intensityEmoji(entry.intensity),
+                      style: const TextStyle(fontSize: 20),
+                    ),
                     if (entry.mood != null) ...[
                       const SizedBox(width: 10),
-                      Text(_moodEmoji(entry.mood!), style: const TextStyle(fontSize: 20)),
+                      Text(
+                        _moodEmoji(entry.mood!),
+                        style: const TextStyle(fontSize: 20),
+                      ),
                     ],
                   ],
                 ),
-                if (entry.goal.isNotEmpty) _detailBlock(widget.s('trainingGoalLabel'), entry.goal),
+                if (entry.goal.isNotEmpty)
+                  _detailBlock(widget.s('trainingGoalLabel'), entry.goal),
                 if (entry.whatWentWell.isNotEmpty)
-                  _detailBlock(widget.s('whatWentWellLabel'), entry.whatWentWell),
+                  _detailBlock(
+                    widget.s('whatWentWellLabel'),
+                    entry.whatWentWell,
+                  ),
                 if (entry.whatWentBad.isNotEmpty)
                   _detailBlock(widget.s('whatWentBadLabel'), entry.whatWentBad),
                 if (entry.improvement.isNotEmpty)
@@ -218,15 +276,21 @@ class _LogbookHistoryTabState extends State<LogbookHistoryTab> {
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF1C1C1E),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       isScrollControlled: true,
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (sheetContext, setSheetState) {
             Widget filterHeading(String text) => Text(
-                  text,
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade400, fontWeight: FontWeight.w700),
-                );
+              text,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade400,
+                fontWeight: FontWeight.w700,
+              ),
+            );
 
             return Padding(
               padding: EdgeInsets.only(
@@ -242,7 +306,11 @@ class _LogbookHistoryTabState extends State<LogbookHistoryTab> {
                   children: [
                     Text(
                       widget.s('filterLabel'),
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     filterHeading(widget.s('filterDateRange')),
@@ -271,7 +339,9 @@ class _LogbookHistoryTabState extends State<LogbookHistoryTab> {
                             label: Text(widget.s(_typeLabelKeys[type]!)),
                             selected: _typeFilter == type,
                             onSelected: (selected) => setSheetState(
-                              () => setState(() => _typeFilter = selected ? type : null),
+                              () => setState(
+                                () => _typeFilter = selected ? type : null,
+                              ),
                             ),
                           ),
                       ],
@@ -285,10 +355,16 @@ class _LogbookHistoryTabState extends State<LogbookHistoryTab> {
                       children: [
                         for (final intensity in TrainingIntensity.values)
                           ChoiceChip(
-                            label: Text(widget.s(_intensityLabelKeys[intensity]!)),
+                            label: Text(
+                              widget.s(_intensityLabelKeys[intensity]!),
+                            ),
                             selected: _intensityFilter == intensity,
                             onSelected: (selected) => setSheetState(
-                              () => setState(() => _intensityFilter = selected ? intensity : null),
+                              () => setState(
+                                () => _intensityFilter = selected
+                                    ? intensity
+                                    : null,
+                              ),
                             ),
                           ),
                       ],
@@ -305,7 +381,9 @@ class _LogbookHistoryTabState extends State<LogbookHistoryTab> {
                             label: Text('$r ⭐'),
                             selected: _ratingFilter == r,
                             onSelected: (selected) => setSheetState(
-                              () => setState(() => _ratingFilter = selected ? r : null),
+                              () => setState(
+                                () => _ratingFilter = selected ? r : null,
+                              ),
                             ),
                           ),
                       ],
@@ -348,7 +426,10 @@ class _LogbookHistoryTabState extends State<LogbookHistoryTab> {
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 24),
-        decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(16)),
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(16),
+        ),
         margin: const EdgeInsets.only(bottom: 12),
         child: const Icon(Icons.delete, color: Colors.white),
       ),
@@ -359,21 +440,33 @@ class _LogbookHistoryTabState extends State<LogbookHistoryTab> {
         child: Container(
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: const Color(0xFF1C1C1E), borderRadius: BorderRadius.circular(16)),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1C1C1E),
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Text(_typeEmoji(entry.trainingType), style: const TextStyle(fontSize: 18)),
+                  Text(
+                    _typeEmoji(entry.trainingType),
+                    style: const TextStyle(fontSize: 18),
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       widget.s(_typeLabelKeys[entry.trainingType]!),
-                      style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.white),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
-                  Text(_fmtDate(entry.date), style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                  Text(
+                    _fmtDate(entry.date),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                  ),
                 ],
               ),
               if (entry.goal.isNotEmpty) ...[
@@ -390,12 +483,19 @@ class _LogbookHistoryTabState extends State<LogbookHistoryTab> {
                 children: [
                   for (var i = 1; i <= 5; i++)
                     Icon(
-                      i <= entry.rating ? Icons.star_rounded : Icons.star_outline_rounded,
+                      i <= entry.rating
+                          ? Icons.star_rounded
+                          : Icons.star_outline_rounded,
                       size: 16,
-                      color: i <= entry.rating ? Colors.amber : Colors.grey.shade700,
+                      color: i <= entry.rating
+                          ? Colors.amber
+                          : Colors.grey.shade700,
                     ),
                   const SizedBox(width: 8),
-                  Text(_intensityEmoji(entry.intensity), style: const TextStyle(fontSize: 14)),
+                  Text(
+                    _intensityEmoji(entry.intensity),
+                    style: const TextStyle(fontSize: 14),
+                  ),
                 ],
               ),
               if (entry.whatWentBad.isNotEmpty) ...[
@@ -427,54 +527,65 @@ class _LogbookHistoryTabState extends State<LogbookHistoryTab> {
               child: Row(
                 children: [
                   Expanded(
-                    child: TextField(
-                      onChanged: (value) => setState(() => _query = value),
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        hintText: widget.s('searchEntries'),
-                        hintStyle: TextStyle(color: Colors.grey.shade500),
-                        prefixIcon: const Icon(Icons.search, color: Colors.white54),
-                        filled: true,
-                        fillColor: const Color(0xFF1C1C1E),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide.none,
+                    child: KeyedSubtree(
+                      key: widget.searchKey,
+                      child: TextField(
+                        onChanged: (value) => setState(() => _query = value),
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          hintText: widget.s('searchEntries'),
+                          hintStyle: TextStyle(color: Colors.grey.shade500),
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: Colors.white54,
+                          ),
+                          filled: true,
+                          fillColor: const Color(0xFF1C1C1E),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide.none,
+                          ),
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 12,
+                          ),
                         ),
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Material(
-                        color: const Color(0xFF1C1C1E),
-                        borderRadius: BorderRadius.circular(14),
-                        child: InkWell(
+                  KeyedSubtree(
+                    key: widget.filterKey,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Material(
+                          color: const Color(0xFF1C1C1E),
                           borderRadius: BorderRadius.circular(14),
-                          onTap: () => _openFilterSheet(context),
-                          child: const Padding(
-                            padding: EdgeInsets.all(12),
-                            child: Icon(Icons.tune, color: Colors.white),
-                          ),
-                        ),
-                      ),
-                      if (_hasActiveFilters)
-                        Positioned(
-                          right: 6,
-                          top: 6,
-                          child: Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primary,
-                              shape: BoxShape.circle,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(14),
+                            onTap: () => _openFilterSheet(context),
+                            child: const Padding(
+                              padding: EdgeInsets.all(12),
+                              child: Icon(Icons.tune, color: Colors.white),
                             ),
                           ),
                         ),
-                    ],
+                        if (_hasActiveFilters)
+                          Positioned(
+                            right: 6,
+                            top: 6,
+                            child: Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.primary,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -482,12 +593,16 @@ class _LogbookHistoryTabState extends State<LogbookHistoryTab> {
             Expanded(
               child: filtered.isEmpty
                   ? Center(
-                      child: Text(widget.s('noEntriesFound'), style: TextStyle(color: Colors.grey.shade500)),
+                      child: Text(
+                        widget.s('noEntriesFound'),
+                        style: TextStyle(color: Colors.grey.shade500),
+                      ),
                     )
                   : ListView.builder(
                       padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
                       itemCount: filtered.length,
-                      itemBuilder: (context, index) => _entryCard(context, filtered[index]),
+                      itemBuilder: (context, index) =>
+                          _entryCard(context, filtered[index]),
                     ),
             ),
           ],

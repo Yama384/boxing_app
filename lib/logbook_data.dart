@@ -169,14 +169,17 @@ class LogbookData {
 
   static void updateGoal(ImprovementGoal updated) {
     goals.value = [
-      for (final g in goals.value) if (g.id == updated.id) updated else g,
+      for (final g in goals.value)
+        if (g.id == updated.id) updated else g,
     ];
     _persistGoals();
   }
 
   static void deleteGoal(ImprovementGoal goal) {
     goals.value = goals.value.where((g) => g.id != goal.id).toList();
-    goalRatings.value = goalRatings.value.where((r) => r.goalId != goal.id).toList();
+    goalRatings.value = goalRatings.value
+        .where((r) => r.goalId != goal.id)
+        .toList();
     _persistGoals();
     _persistGoalRatings();
   }
@@ -184,11 +187,19 @@ class LogbookData {
   /// Wichtigstes aktives Ziel für "Dein Fokus heute": höchste Priorität
   /// zuerst, bei Gleichstand das zuletzt bearbeitete.
   static ImprovementGoal? get focusGoal {
-    final active = goals.value.where((g) => g.status == GoalStatus.active).toList();
+    final active = goals.value
+        .where((g) => g.status == GoalStatus.active)
+        .toList();
     if (active.isEmpty) return null;
-    const priorityOrder = {GoalPriority.high: 0, GoalPriority.medium: 1, GoalPriority.low: 2};
+    const priorityOrder = {
+      GoalPriority.high: 0,
+      GoalPriority.medium: 1,
+      GoalPriority.low: 2,
+    };
     active.sort((a, b) {
-      final byPriority = priorityOrder[a.priority]!.compareTo(priorityOrder[b.priority]!);
+      final byPriority = priorityOrder[a.priority]!.compareTo(
+        priorityOrder[b.priority]!,
+      );
       if (byPriority != 0) return byPriority;
       return b.updatedAt.compareTo(a.updatedAt);
     });
@@ -222,12 +233,16 @@ class LogbookData {
   // --- Dashboard-Statistiken ---
 
   static int get trainingDaysCount {
-    final days = entries.value.map((e) => DateTime(e.date.year, e.date.month, e.date.day)).toSet();
+    final days = entries.value
+        .map((e) => DateTime(e.date.year, e.date.month, e.date.day))
+        .toSet();
     return days.length;
   }
 
   static int get currentStreak {
-    final days = entries.value.map((e) => DateTime(e.date.year, e.date.month, e.date.day)).toSet();
+    final days = entries.value
+        .map((e) => DateTime(e.date.year, e.date.month, e.date.day))
+        .toSet();
     if (days.isEmpty) return 0;
     final today = DateTime.now();
     var cursor = DateTime(today.year, today.month, today.day);
@@ -240,5 +255,29 @@ class LogbookData {
       cursor = cursor.subtract(const Duration(days: 1));
     }
     return streak;
+  }
+
+  /// Längste zusammenhängende Trainingsserie über die gesamte Historie --
+  /// im Unterschied zu [currentStreak], die nur die aktuell laufende Serie
+  /// zählt (0, sobald ein Tag ausgelassen wurde).
+  static int get longestStreak {
+    final days =
+        entries.value
+            .map((e) => DateTime(e.date.year, e.date.month, e.date.day))
+            .toSet()
+            .toList()
+          ..sort();
+    if (days.isEmpty) return 0;
+    var longest = 1;
+    var current = 1;
+    for (var i = 1; i < days.length; i++) {
+      if (days[i].difference(days[i - 1]).inDays == 1) {
+        current++;
+        if (current > longest) longest = current;
+      } else {
+        current = 1;
+      }
+    }
+    return longest;
   }
 }

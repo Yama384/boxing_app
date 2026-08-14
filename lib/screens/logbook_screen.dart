@@ -20,40 +20,39 @@ class LogbookScreen extends StatefulWidget {
 }
 
 class _LogbookScreenState extends State<LogbookScreen> {
-  static const _introId = 'logbook_intro';
-
   _LogbookView _view = _LogbookView.dashboard;
 
   final _streakKey = GlobalKey();
+  final _achievementsKey = GlobalKey();
   final _focusKey = GlobalKey();
   final _goalsKey = GlobalKey();
+  final _historySearchKey = GlobalKey();
+  final _historyFilterKey = GlobalKey();
+  final _analysisRecordsKey = GlobalKey();
+  final _analysisRadarKey = GlobalKey();
+  final _analysisRangeKey = GlobalKey();
+  final _analysisPainKey = GlobalKey();
+
+  static String _introIdFor(_LogbookView view) => 'logbook_intro_${view.name}';
 
   @override
   void initState() {
     super.initState();
-    if (!CoachGuide.hasSeen(_introId)) {
+    if (!CoachGuide.hasSeen(_introIdFor(_LogbookView.dashboard))) {
       Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted) _startTour();
       });
     }
   }
 
-  // showCoachTour() wird hier bewusst direkt aufgerufen statt in einem
-  // addPostFrameCallback: _startTour() läuft entweder aus dem Future.delayed
-  // in initState() (der Baum ist da längst gebaut) oder aus einem direkten
-  // Tap auf das Guide-Icon -- letzterer löst selbst kein setState/keinen
-  // neuen Frame aus, wodurch der Callback sonst erst beim nächsten
-  // zufälligen Rebuild feuert (Tour erscheint verzögert oder gar nicht).
-  void _startTour() {
-    CoachGuide.markSeen(_introId);
-    if (_view != _LogbookView.dashboard) {
-      setState(() => _view = _LogbookView.dashboard);
-    }
-    final s = AppStrings.of(AppSettings.locale.value);
-    showCoachTour(
-      context,
-      steps: [
+  List<CoachTourStep> _stepsFor(_LogbookView view, AppStrings s) {
+    return switch (view) {
+      _LogbookView.dashboard => [
         CoachTourStep(anchorKey: _streakKey, message: s('coachTipDashboard')),
+        CoachTourStep(
+          anchorKey: _achievementsKey,
+          message: s('coachTourAchievementsSection'),
+        ),
         CoachTourStep(
           anchorKey: _focusKey,
           message: s('coachTourFocusSection'),
@@ -63,10 +62,68 @@ class _LogbookScreenState extends State<LogbookScreen> {
           message: s('coachTourGoalsSection'),
         ),
       ],
+      _LogbookView.history => [
+        CoachTourStep(
+          anchorKey: _historySearchKey,
+          message: s('coachTourHistorySearch'),
+        ),
+        CoachTourStep(
+          anchorKey: _historyFilterKey,
+          message: s('coachTourHistoryFilter'),
+        ),
+      ],
+      _LogbookView.analysis => [
+        CoachTourStep(
+          anchorKey: _analysisRecordsKey,
+          message: s('coachTourAnalysisRecords'),
+        ),
+        CoachTourStep(
+          anchorKey: _analysisRadarKey,
+          message: s('coachTourAnalysisRadar'),
+        ),
+        CoachTourStep(
+          anchorKey: _analysisRangeKey,
+          message: s('coachTourAnalysisRange'),
+        ),
+        CoachTourStep(
+          anchorKey: _analysisPainKey,
+          message: s('coachTourAnalysisPain'),
+        ),
+      ],
+    };
+  }
+
+  // showCoachTour() wird hier bewusst direkt aufgerufen statt in einem
+  // addPostFrameCallback: _startTour() läuft entweder aus dem Future.delayed
+  // in initState()/beim Tab-Wechsel (der Baum ist da längst gebaut) oder aus
+  // einem direkten Tap auf das Guide-Icon -- letzterer löst selbst kein
+  // setState/keinen neuen Frame aus, wodurch der Callback sonst erst beim
+  // nächsten zufälligen Rebuild feuert (Tour erscheint verzögert oder gar
+  // nicht).
+  //
+  // Die Tour erklärt bewusst immer den *aktuell sichtbaren* Tab statt fix
+  // das Dashboard -- kein erzwungener Tab-Wechsel mehr nötig, und alle drei
+  // Seiten (Übersicht/Historie/Auswertung) bekommen so ihre eigene Erklärung.
+  void _startTour() {
+    CoachGuide.markSeen(_introIdFor(_view));
+    final s = AppStrings.of(AppSettings.locale.value);
+    showCoachTour(
+      context,
+      steps: _stepsFor(_view, s),
       nextLabel: s('coachTourNext'),
       doneLabel: s('coachTourDone'),
       skipLabel: s('coachTourSkip'),
     );
+  }
+
+  void _onViewChanged(_LogbookView? value) {
+    if (value == null) return;
+    setState(() => _view = value);
+    if (!CoachGuide.hasSeen(_introIdFor(value))) {
+      Future.delayed(const Duration(milliseconds: 400), () {
+        if (mounted && _view == value) _startTour();
+      });
+    }
   }
 
   // IndexedStack statt eines Switches: Dashboard und Historie bleiben beim
@@ -81,11 +138,22 @@ class _LogbookScreenState extends State<LogbookScreen> {
         LogbookDashboardTab(
           s: s,
           streakKey: _streakKey,
+          achievementsKey: _achievementsKey,
           focusKey: _focusKey,
           goalsKey: _goalsKey,
         ),
-        LogbookHistoryTab(s: s),
-        LogbookAnalysisTab(s: s),
+        LogbookHistoryTab(
+          s: s,
+          searchKey: _historySearchKey,
+          filterKey: _historyFilterKey,
+        ),
+        LogbookAnalysisTab(
+          s: s,
+          recordsKey: _analysisRecordsKey,
+          radarKey: _analysisRadarKey,
+          rangeKey: _analysisRangeKey,
+          painKey: _analysisPainKey,
+        ),
       ],
     );
   }
@@ -150,9 +218,7 @@ class _LogbookScreenState extends State<LogbookScreen> {
                         s('logbookAnalysisTab'),
                       ),
                     },
-                    onValueChanged: (value) {
-                      if (value != null) setState(() => _view = value);
-                    },
+                    onValueChanged: _onViewChanged,
                   ),
                 ),
                 Expanded(child: _buildBody(s)),

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import '../achievements_data.dart';
 import '../app_strings.dart';
 import '../logbook_data.dart';
+import '../models/achievement.dart';
 import '../models/improvement_goal.dart';
 import '../models/training_entry.dart';
+import '../widgets/achievement_badge.dart';
 import '../widgets/animated_stat_number.dart';
 import '../widgets/fade_slide_in.dart';
 import '../widgets/goal_progress_card.dart';
@@ -14,6 +17,7 @@ class LogbookDashboardTab extends StatelessWidget {
     super.key,
     required this.s,
     this.streakKey,
+    this.achievementsKey,
     this.focusKey,
     this.goalsKey,
   });
@@ -23,6 +27,7 @@ class LogbookDashboardTab extends StatelessWidget {
   /// Anker für die Logbuch-Guide-Tour (siehe logbook_screen.dart) -- optional,
   /// damit dieses Widget auch ohne Tour-Anbindung nutzbar bleibt.
   final GlobalKey? streakKey;
+  final GlobalKey? achievementsKey;
   final GlobalKey? focusKey;
   final GlobalKey? goalsKey;
 
@@ -96,6 +101,49 @@ class LogbookDashboardTab extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(child: _statTile(completedGoals, s('statCompletedGoals'))),
           ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAchievementsSection(
+    List<TrainingEntry> entries,
+    List<ImprovementGoal> goals,
+  ) {
+    final ctx = AchievementContext(
+      entries: entries,
+      goals: goals,
+      longestStreak: LogbookData.longestStreak,
+    );
+    final unlockedDates = AchievementsData.unlockedDates.value;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          s('achievementsTitle'),
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 92,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: achievementCatalog.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              final achievement = achievementCatalog[index];
+              return AchievementBadge(
+                achievement: achievement,
+                unlocked: achievement.isUnlocked(ctx),
+                unlockedAt: unlockedDates[achievement.id],
+                s: s,
+              );
+            },
+          ),
         ),
       ],
     );
@@ -326,6 +374,9 @@ class LogbookDashboardTab extends StatelessWidget {
             final completedGoals = goals
                 .where((g) => g.status == GoalStatus.completed)
                 .length;
+            // Prüft bei jeder Änderung an Einträgen/Zielen, ob neue
+            // Achievements erreicht wurden, und merkt sich das Datum dafür.
+            AchievementsData.syncUnlocked();
 
             return ListView(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
@@ -335,6 +386,11 @@ class LogbookDashboardTab extends StatelessWidget {
                   entries.length,
                   activeGoals.length,
                   completedGoals,
+                ),
+                const SizedBox(height: 24),
+                KeyedSubtree(
+                  key: achievementsKey,
+                  child: _buildAchievementsSection(entries, goals),
                 ),
                 const SizedBox(height: 24),
                 KeyedSubtree(

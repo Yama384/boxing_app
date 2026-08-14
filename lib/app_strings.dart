@@ -4,6 +4,7 @@ const Map<String, Map<String, String>> _translations = {
   'de': {
     'appTitle': 'Boxing App',
     'tagline': 'Train. Track. Win.',
+    'homeStreakBadge': '{n} Tage Serie',
     'timer': 'Timer',
     'stopwatch': 'Stoppuhr',
     'interval': 'Intervalle',
@@ -53,6 +54,14 @@ const Map<String, Map<String, String>> _translations = {
         'Noch nicht genug Daten -- trag deine Maximalkraft an mindestens 2 Trainingstagen ein',
     'newEntry': 'Maximalkraft eintragen',
     'maxWeightKg': 'Maximalgewicht (kg)',
+    'weightInputError': 'Gib ein gültiges Gewicht über 0 ein.',
+    'editEntry': 'Eintrag bearbeiten',
+    'save': 'Speichern',
+    'renameExercise': 'Übung umbenennen',
+    'personalRecord': 'PR',
+    'noExercisesYet': 'Noch keine Übungen',
+    'noExercisesYetSubtitle':
+        'Füg mit dem "+"-Button deine erste Kraftübung hinzu.',
     'noEntriesYet':
         'Noch keine Einträge -- trag nach deiner nächsten Trainingseinheit deine Maximalkraft ein',
     'lastEntry': 'Zuletzt',
@@ -121,9 +130,53 @@ const Map<String, Map<String, String>> _translations = {
     'analysisTypeDistribution': 'Trainingsverteilung',
     'analysisTechniqueTrend': 'Technik-Erfolg',
     'analysisPainZones': 'Schmerzen nach Körperzone',
+    'bodyMapTapHint': 'Tippe auf einen Punkt für Details',
     'analysisNotEnoughData':
         'Noch nicht genug Daten in diesem Zeitraum für einen Trend.',
     'analysisNoDataInRange': 'Keine Einträge in diesem Zeitraum.',
+    'analysisWeekRecap': 'Diese Woche',
+    'analysisWeekSessions': 'Einheiten',
+    'analysisWeekAvgRating': 'Ø Bewertung',
+    'analysisWeekMinutes': 'Minuten',
+    'analysisRecords': 'Bestleistungen',
+    'analysisRecordLongestStreak': 'Längste Serie',
+    'analysisRecordBestWeek': 'Meiste Einheiten/Woche',
+    'analysisRecordBestRatingMonth': 'Bester Monat (Ø Bewertung)',
+    'analysisRecordTotalHours': 'Trainingsstunden gesamt',
+    'achievementsTitle': 'Erfolge',
+    'achievementLockedHint': 'Noch nicht freigeschaltet',
+    'achievementUnlockedOn': 'Freigeschaltet am {date}',
+    'achievementFirstEntryTitle': 'Erste Schritte',
+    'achievementFirstEntryDesc': 'Deine erste Trainingseinheit geloggt.',
+    'achievementStreak3Title': 'In Fahrt',
+    'achievementStreak3Desc': '3 Tage in Folge trainiert.',
+    'achievementStreak7Title': 'Eine Woche dran',
+    'achievementStreak7Desc': '7 Tage in Folge trainiert.',
+    'achievementStreak30Title': 'Eiserner Wille',
+    'achievementStreak30Desc': '30 Tage in Folge trainiert.',
+    'achievementSessions10Title': 'Warmgelaufen',
+    'achievementSessions10Desc': '10 Trainingseinheiten geloggt.',
+    'achievementSessions50Title': 'Am Ball',
+    'achievementSessions50Desc': '50 Trainingseinheiten geloggt.',
+    'achievementSessions100Title': 'Veteran',
+    'achievementSessions100Desc': '100 Trainingseinheiten geloggt.',
+    'achievementFirstSparringTitle': 'Erstes Sparring',
+    'achievementFirstSparringDesc': 'Deine erste Sparring-Einheit geloggt.',
+    'achievementFirstGoalTitle': 'Ziel erreicht',
+    'achievementFirstGoalDesc': 'Dein erstes Verbesserungsziel abgeschlossen.',
+    'achievementFiveTechniquesTitle': 'Vielseitig',
+    'achievementFiveTechniquesDesc': '5 Techniken in einer Einheit geübt.',
+    'achievementComebackTitle': 'Comeback',
+    'achievementComebackDesc':
+        'Nach über einer Woche Pause wieder eingestiegen.',
+    'achievementGoalMasterTitle': 'Zielstrebig',
+    'achievementGoalMasterDesc': '3 Verbesserungsziele abgeschlossen.',
+    'skillRadarTitle': 'Skill-Profil',
+    'skillRadarEmptyHint':
+        'Leg Ziele in verschiedenen Kategorien an, um dein Skill-Profil zu sehen.',
+    'analysisStaleTechniques': 'Lange nicht geübt',
+    'analysisStaleTechniquesHint':
+        'Diese Techniken hast du seit über 2 Wochen nicht mehr trainiert.',
     'statEntries': 'Trainingseinträge',
     'statTrainingDays': 'Trainingstage',
     'statActiveGoals': 'Aktive Ziele',
@@ -196,8 +249,22 @@ const Map<String, Map<String, String>> _translations = {
         'Hier siehst du auf einen Blick, wie oft du trainierst und wie deine Ziele vorankommen.',
     'coachTourFocusSection':
         'Hier siehst du dein aktuelles Fokus-Ziel -- worauf du dich gerade am meisten konzentrieren willst.',
+    'coachTourAchievementsSection':
+        'Erfolge, die du dir mit deinen Trainings erarbeitest. Tipp auf einen freigeschalteten oder gesperrten Erfolg für Details.',
     'coachTourGoalsSection':
         'Hier findest du alle deine aktiven Ziele. Tipp drauf, um Fortschritt einzutragen oder sie zu bearbeiten.',
+    'coachTourHistorySearch':
+        'Durchsuche deine Trainingseinträge nach Stichworten, z.B. aus deinen Notizen.',
+    'coachTourHistoryFilter':
+        'Grenz die Liste über Zeitraum, Trainingsart, Intensität oder Bewertung ein.',
+    'coachTourAnalysisRecords':
+        'Deine persönlichen Bestleistungen -- unabhängig vom Zeitraum-Filter weiter unten.',
+    'coachTourAnalysisRadar':
+        'Dein Skill-Profil zeigt, in welchen Bereichen du laut deinen Zielen am meisten Fortschritt machst.',
+    'coachTourAnalysisRange':
+        'Wähl hier den Zeitraum, für den die Trends und Auswertungen unten berechnet werden.',
+    'coachTourAnalysisPain':
+        'Zeigt, wo du am häufigsten Schmerzen hattest -- tipp auf einen Punkt für Details.',
     'coachTourGoalProblem':
         'Das hast du gerade als Schwäche im Trainingseintrag notiert -- das Ziel hier greift das jetzt konkret auf.',
     'coachTourGoalTitle':
@@ -321,6 +388,7 @@ const Map<String, Map<String, String>> _translations = {
   'en': {
     'appTitle': 'Boxing App',
     'tagline': 'Train. Track. Win.',
+    'homeStreakBadge': '{n} day streak',
     'timer': 'Timer',
     'stopwatch': 'Stopwatch',
     'interval': 'Intervals',
@@ -369,6 +437,14 @@ const Map<String, Map<String, String>> _translations = {
         'Not enough data yet -- log your max strength on at least 2 training days',
     'newEntry': 'Log max strength',
     'maxWeightKg': 'Max weight (kg)',
+    'weightInputError': 'Enter a valid weight above 0.',
+    'editEntry': 'Edit entry',
+    'save': 'Save',
+    'renameExercise': 'Rename exercise',
+    'personalRecord': 'PR',
+    'noExercisesYet': 'No exercises yet',
+    'noExercisesYetSubtitle':
+        'Add your first strength exercise with the "+" button.',
     'noEntriesYet':
         'No entries yet -- log your max strength after your next training session',
     'lastEntry': 'Last',
@@ -437,8 +513,51 @@ const Map<String, Map<String, String>> _translations = {
     'analysisTypeDistribution': 'Training distribution',
     'analysisTechniqueTrend': 'Technique success',
     'analysisPainZones': 'Pain by body zone',
+    'bodyMapTapHint': 'Tap a point for details',
     'analysisNotEnoughData': 'Not enough data in this range yet for a trend.',
     'analysisNoDataInRange': 'No entries in this range.',
+    'analysisWeekRecap': 'This week',
+    'analysisWeekSessions': 'Sessions',
+    'analysisWeekAvgRating': 'Avg. rating',
+    'analysisWeekMinutes': 'Minutes',
+    'analysisRecords': 'Personal records',
+    'analysisRecordLongestStreak': 'Longest streak',
+    'analysisRecordBestWeek': 'Most sessions/week',
+    'analysisRecordBestRatingMonth': 'Best month (avg. rating)',
+    'analysisRecordTotalHours': 'Total training hours',
+    'achievementsTitle': 'Achievements',
+    'achievementLockedHint': 'Not unlocked yet',
+    'achievementUnlockedOn': 'Unlocked on {date}',
+    'achievementFirstEntryTitle': 'First steps',
+    'achievementFirstEntryDesc': 'Logged your first training session.',
+    'achievementStreak3Title': 'Getting going',
+    'achievementStreak3Desc': 'Trained 3 days in a row.',
+    'achievementStreak7Title': 'A week strong',
+    'achievementStreak7Desc': 'Trained 7 days in a row.',
+    'achievementStreak30Title': 'Iron will',
+    'achievementStreak30Desc': 'Trained 30 days in a row.',
+    'achievementSessions10Title': 'Warmed up',
+    'achievementSessions10Desc': 'Logged 10 training sessions.',
+    'achievementSessions50Title': 'In the groove',
+    'achievementSessions50Desc': 'Logged 50 training sessions.',
+    'achievementSessions100Title': 'Veteran',
+    'achievementSessions100Desc': 'Logged 100 training sessions.',
+    'achievementFirstSparringTitle': 'First sparring',
+    'achievementFirstSparringDesc': 'Logged your first sparring session.',
+    'achievementFirstGoalTitle': 'Goal reached',
+    'achievementFirstGoalDesc': 'Completed your first improvement goal.',
+    'achievementFiveTechniquesTitle': 'Well-rounded',
+    'achievementFiveTechniquesDesc': 'Practiced 5 techniques in one session.',
+    'achievementComebackTitle': 'Comeback',
+    'achievementComebackDesc': 'Got back to training after a week+ break.',
+    'achievementGoalMasterTitle': 'Goal-driven',
+    'achievementGoalMasterDesc': 'Completed 3 improvement goals.',
+    'skillRadarTitle': 'Skill profile',
+    'skillRadarEmptyHint':
+        'Add goals in different categories to see your skill profile.',
+    'analysisStaleTechniques': 'Getting rusty',
+    'analysisStaleTechniquesHint':
+        "You haven't drilled these techniques in over 2 weeks.",
     'statEntries': 'Training entries',
     'statTrainingDays': 'Training days',
     'statActiveGoals': 'Active goals',
@@ -509,8 +628,22 @@ const Map<String, Map<String, String>> _translations = {
         "Here's your training at a glance -- how often you train and how your goals are coming along.",
     'coachTourFocusSection':
         "This shows your current focus goal -- whatever you want to concentrate on most right now.",
+    'coachTourAchievementsSection':
+        "Milestones you earn through training. Tap an unlocked or locked achievement for details.",
     'coachTourGoalsSection':
         "Here you'll find all your active goals. Tap one to log progress or edit it.",
+    'coachTourHistorySearch':
+        'Search your training entries by keyword, e.g. from your notes.',
+    'coachTourHistoryFilter':
+        'Narrow the list down by date range, training type, intensity, or rating.',
+    'coachTourAnalysisRecords':
+        'Your personal records -- independent of the time range filter below.',
+    'coachTourAnalysisRadar':
+        'Your skill profile shows which areas you are making the most progress in, based on your goals.',
+    'coachTourAnalysisRange':
+        'Pick the time range the trends and stats below are calculated for.',
+    'coachTourAnalysisPain':
+        'Shows where you had pain most often -- tap a point for details.',
     'coachTourGoalProblem':
         "This is the weakness you just noted in your training entry -- this goal builds on it directly.",
     'coachTourGoalTitle':
