@@ -544,6 +544,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
             spots: spots,
             isCurved: true,
             curveSmoothness: 0.3,
+            preventCurveOverShooting: true,
             gradient: LinearGradient(
               colors: [color.withValues(alpha: 0.7), color],
             ),

@@ -258,12 +258,26 @@ const Map<String, Map<String, String>> _translations = {
         'Durchsuche deine Trainingseinträge nach Stichworten, z.B. aus deinen Notizen.',
     'coachTourHistoryFilter':
         'Grenz die Liste über Zeitraum, Trainingsart, Intensität oder Bewertung ein.',
+    'coachTourAnalysisWeekRecap':
+        'Vergleicht deine letzten 7 Tage mit den 7 Tagen davor -- so siehst du auf einen Blick, ob du gerade zu- oder abnimmst.',
     'coachTourAnalysisRecords':
         'Deine persönlichen Bestleistungen -- unabhängig vom Zeitraum-Filter weiter unten.',
+    'coachTourAnalysisStaleTechniques':
+        'Techniken, die du früher regelmäßig geübt hast, aber seit über 2 Wochen nicht mehr -- damit nichts einrostet.',
     'coachTourAnalysisRadar':
         'Dein Skill-Profil zeigt, in welchen Bereichen du laut deinen Zielen am meisten Fortschritt machst.',
     'coachTourAnalysisRange':
         'Wähl hier den Zeitraum, für den die Trends und Auswertungen unten berechnet werden.',
+    'coachTourAnalysisStats':
+        'Kennzahlen für den gewählten Zeitraum: Anzahl Einheiten, Ø-Dauer, Ø-Bewertung und Ø-Intensität.',
+    'coachTourAnalysisRatingTrend':
+        'Wie du deine Trainings im Schnitt bewertest, über die Zeit -- steigt oder sinkt dein Gefühl fürs Training?',
+    'coachTourAnalysisIntensityTrend':
+        'Wie intensiv deine Einheiten waren, über die Zeit -- hilft zu erkennen, ob du dich steigerst oder überlastest.',
+    'coachTourAnalysisTypeDistribution':
+        'Zeigt, welche Trainingsarten du im gewählten Zeitraum am häufigsten gemacht hast.',
+    'coachTourAnalysisTechniqueTrend':
+        'Wie erfolgreich deine Technik in den Trainings war, über die Zeit.',
     'coachTourAnalysisPain':
         'Zeigt, wo du am häufigsten Schmerzen hattest -- tipp auf einen Punkt für Details.',
     'coachTourGoalProblem':
@@ -638,12 +652,26 @@ const Map<String, Map<String, String>> _translations = {
         'Search your training entries by keyword, e.g. from your notes.',
     'coachTourHistoryFilter':
         'Narrow the list down by date range, training type, intensity, or rating.',
+    'coachTourAnalysisWeekRecap':
+        'Compares your last 7 days with the 7 days before that -- shows at a glance whether you are trending up or down.',
     'coachTourAnalysisRecords':
         'Your personal records -- independent of the time range filter below.',
+    'coachTourAnalysisStaleTechniques':
+        "Techniques you used to practice regularly but haven't touched in over 2 weeks -- so nothing gets rusty.",
     'coachTourAnalysisRadar':
         'Your skill profile shows which areas you are making the most progress in, based on your goals.',
     'coachTourAnalysisRange':
         'Pick the time range the trends and stats below are calculated for.',
+    'coachTourAnalysisStats':
+        'Key numbers for the selected time range: number of sessions, avg. duration, avg. rating, and avg. intensity.',
+    'coachTourAnalysisRatingTrend':
+        'How you rate your sessions on average, over time -- is your sense of the training trending up or down?',
+    'coachTourAnalysisIntensityTrend':
+        'How intense your sessions were, over time -- helps spot whether you are progressing or overloading.',
+    'coachTourAnalysisTypeDistribution':
+        'Shows which training types you did most often in the selected time range.',
+    'coachTourAnalysisTechniqueTrend':
+        'How successful your technique was in training, over time.',
     'coachTourAnalysisPain':
         'Shows where you had pain most often -- tap a point for details.',
     'coachTourGoalProblem':

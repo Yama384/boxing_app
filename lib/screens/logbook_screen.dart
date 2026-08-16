@@ -28,9 +28,16 @@ class _LogbookScreenState extends State<LogbookScreen> {
   final _goalsKey = GlobalKey();
   final _historySearchKey = GlobalKey();
   final _historyFilterKey = GlobalKey();
+  final _analysisWeekRecapKey = GlobalKey();
   final _analysisRecordsKey = GlobalKey();
+  final _analysisStaleTechniquesKey = GlobalKey();
   final _analysisRadarKey = GlobalKey();
   final _analysisRangeKey = GlobalKey();
+  final _analysisStatsKey = GlobalKey();
+  final _analysisRatingTrendKey = GlobalKey();
+  final _analysisIntensityTrendKey = GlobalKey();
+  final _analysisTypeDistributionKey = GlobalKey();
+  final _analysisTechniqueTrendKey = GlobalKey();
   final _analysisPainKey = GlobalKey();
 
   static String _introIdFor(_LogbookView view) => 'logbook_intro_${view.name}';
@@ -74,8 +81,16 @@ class _LogbookScreenState extends State<LogbookScreen> {
       ],
       _LogbookView.analysis => [
         CoachTourStep(
+          anchorKey: _analysisWeekRecapKey,
+          message: s('coachTourAnalysisWeekRecap'),
+        ),
+        CoachTourStep(
           anchorKey: _analysisRecordsKey,
           message: s('coachTourAnalysisRecords'),
+        ),
+        CoachTourStep(
+          anchorKey: _analysisStaleTechniquesKey,
+          message: s('coachTourAnalysisStaleTechniques'),
         ),
         CoachTourStep(
           anchorKey: _analysisRadarKey,
@@ -84,6 +99,26 @@ class _LogbookScreenState extends State<LogbookScreen> {
         CoachTourStep(
           anchorKey: _analysisRangeKey,
           message: s('coachTourAnalysisRange'),
+        ),
+        CoachTourStep(
+          anchorKey: _analysisStatsKey,
+          message: s('coachTourAnalysisStats'),
+        ),
+        CoachTourStep(
+          anchorKey: _analysisRatingTrendKey,
+          message: s('coachTourAnalysisRatingTrend'),
+        ),
+        CoachTourStep(
+          anchorKey: _analysisIntensityTrendKey,
+          message: s('coachTourAnalysisIntensityTrend'),
+        ),
+        CoachTourStep(
+          anchorKey: _analysisTypeDistributionKey,
+          message: s('coachTourAnalysisTypeDistribution'),
+        ),
+        CoachTourStep(
+          anchorKey: _analysisTechniqueTrendKey,
+          message: s('coachTourAnalysisTechniqueTrend'),
         ),
         CoachTourStep(
           anchorKey: _analysisPainKey,
@@ -107,9 +142,18 @@ class _LogbookScreenState extends State<LogbookScreen> {
   void _startTour() {
     CoachGuide.markSeen(_introIdFor(_view));
     final s = AppStrings.of(AppSettings.locale.value);
+    // Schritte ohne aktuell vorhandenen Anker rausfiltern (z.B. Karten, die
+    // mangels Daten gar nicht gebaut werden, wie "Lange nicht geübt" oder
+    // "Schmerzen"). Sonst zeigt die "x/y"-Zählung eine Gesamtzahl, die diese
+    // Tour nie erreicht, weil showCoachTour() fehlende Anker erst beim
+    // Anzeigen überspringt -- die Zahl stimmt dann nicht mit dem überein,
+    // was tatsächlich zu sehen ist.
+    final steps = _stepsFor(_view, s)
+        .where((step) => step.anchorKey.currentContext != null)
+        .toList();
     showCoachTour(
       context,
-      steps: _stepsFor(_view, s),
+      steps: steps,
       nextLabel: s('coachTourNext'),
       doneLabel: s('coachTourDone'),
       skipLabel: s('coachTourSkip'),
@@ -149,9 +193,16 @@ class _LogbookScreenState extends State<LogbookScreen> {
         ),
         LogbookAnalysisTab(
           s: s,
+          weekRecapKey: _analysisWeekRecapKey,
           recordsKey: _analysisRecordsKey,
+          staleTechniquesKey: _analysisStaleTechniquesKey,
           radarKey: _analysisRadarKey,
           rangeKey: _analysisRangeKey,
+          statsKey: _analysisStatsKey,
+          ratingTrendKey: _analysisRatingTrendKey,
+          intensityTrendKey: _analysisIntensityTrendKey,
+          typeDistributionKey: _analysisTypeDistributionKey,
+          techniqueTrendKey: _analysisTechniqueTrendKey,
           painKey: _analysisPainKey,
         ),
       ],

@@ -17,9 +17,16 @@ class LogbookAnalysisTab extends StatefulWidget {
   const LogbookAnalysisTab({
     super.key,
     required this.s,
+    this.weekRecapKey,
     this.recordsKey,
+    this.staleTechniquesKey,
     this.radarKey,
     this.rangeKey,
+    this.statsKey,
+    this.ratingTrendKey,
+    this.intensityTrendKey,
+    this.typeDistributionKey,
+    this.techniqueTrendKey,
     this.painKey,
   });
 
@@ -27,9 +34,16 @@ class LogbookAnalysisTab extends StatefulWidget {
 
   /// Anker für die Logbuch-Guide-Tour (siehe logbook_screen.dart) -- optional,
   /// damit dieses Widget auch ohne Tour-Anbindung nutzbar bleibt.
+  final GlobalKey? weekRecapKey;
   final GlobalKey? recordsKey;
+  final GlobalKey? staleTechniquesKey;
   final GlobalKey? radarKey;
   final GlobalKey? rangeKey;
+  final GlobalKey? statsKey;
+  final GlobalKey? ratingTrendKey;
+  final GlobalKey? intensityTrendKey;
+  final GlobalKey? typeDistributionKey;
+  final GlobalKey? techniqueTrendKey;
   final GlobalKey? painKey;
 
   @override
@@ -370,6 +384,7 @@ class _LogbookAnalysisTabState extends State<LogbookAnalysisTab> {
               spots: spots,
               isCurved: true,
               curveSmoothness: 0.3,
+              preventCurveOverShooting: true,
               color: color,
               barWidth: 3,
               dotData: const FlDotData(show: true),
@@ -877,7 +892,10 @@ class _LogbookAnalysisTabState extends State<LogbookAnalysisTab> {
             return ListView(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
               children: [
-                _weekRecapCard(widget.s, allEntries),
+                KeyedSubtree(
+                  key: widget.weekRecapKey,
+                  child: _weekRecapCard(widget.s, allEntries),
+                ),
                 const SizedBox(height: 16),
                 KeyedSubtree(
                   key: widget.recordsKey,
@@ -885,7 +903,10 @@ class _LogbookAnalysisTabState extends State<LogbookAnalysisTab> {
                 ),
                 if (staleCard != null) ...[
                   const SizedBox(height: 16),
-                  staleCard,
+                  KeyedSubtree(
+                    key: widget.staleTechniquesKey,
+                    child: staleCard,
+                  ),
                 ],
                 const SizedBox(height: 16),
                 KeyedSubtree(
@@ -912,47 +933,62 @@ class _LogbookAnalysisTabState extends State<LogbookAnalysisTab> {
                     ),
                   )
                 else ...[
-                  _statsGrid(widget.s, entries),
-                  const SizedBox(height: 16),
-                  _card(
-                    title: widget.s('analysisRatingTrend'),
-                    child: _trendChart(
-                      widget.s,
-                      entries: entries,
-                      valueOf: (e) => e.rating.toDouble(),
-                      minY: 0.5,
-                      maxY: 5.5,
-                      color: Colors.amber,
-                    ),
+                  KeyedSubtree(
+                    key: widget.statsKey,
+                    child: _statsGrid(widget.s, entries),
                   ),
                   const SizedBox(height: 16),
-                  _card(
-                    title: widget.s('analysisIntensityTrend'),
-                    child: _trendChart(
-                      widget.s,
-                      entries: entries,
-                      valueOf: (e) => _intensityValue(e.intensity).toDouble(),
-                      minY: 0.5,
-                      maxY: 4.5,
-                      color: primary,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _card(
-                    title: widget.s('analysisTypeDistribution'),
-                    child: _typeDistribution(widget.s, entries, primary),
-                  ),
-                  if (entries.any((e) => e.techniqueSuccessRating != null)) ...[
-                    const SizedBox(height: 16),
-                    _card(
-                      title: widget.s('analysisTechniqueTrend'),
+                  KeyedSubtree(
+                    key: widget.ratingTrendKey,
+                    child: _card(
+                      title: widget.s('analysisRatingTrend'),
                       child: _trendChart(
                         widget.s,
                         entries: entries,
-                        valueOf: (e) => e.techniqueSuccessRating?.toDouble(),
+                        valueOf: (e) => e.rating.toDouble(),
                         minY: 0.5,
                         maxY: 5.5,
-                        color: Colors.lightBlueAccent,
+                        color: Colors.amber,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  KeyedSubtree(
+                    key: widget.intensityTrendKey,
+                    child: _card(
+                      title: widget.s('analysisIntensityTrend'),
+                      child: _trendChart(
+                        widget.s,
+                        entries: entries,
+                        valueOf: (e) => _intensityValue(e.intensity).toDouble(),
+                        minY: 0.5,
+                        maxY: 4.5,
+                        color: primary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  KeyedSubtree(
+                    key: widget.typeDistributionKey,
+                    child: _card(
+                      title: widget.s('analysisTypeDistribution'),
+                      child: _typeDistribution(widget.s, entries, primary),
+                    ),
+                  ),
+                  if (entries.any((e) => e.techniqueSuccessRating != null)) ...[
+                    const SizedBox(height: 16),
+                    KeyedSubtree(
+                      key: widget.techniqueTrendKey,
+                      child: _card(
+                        title: widget.s('analysisTechniqueTrend'),
+                        child: _trendChart(
+                          widget.s,
+                          entries: entries,
+                          valueOf: (e) => e.techniqueSuccessRating?.toDouble(),
+                          minY: 0.5,
+                          maxY: 5.5,
+                          color: Colors.lightBlueAccent,
+                        ),
                       ),
                     ),
                   ],
