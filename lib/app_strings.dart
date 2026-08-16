@@ -80,8 +80,12 @@ const Map<String, Map<String, String>> _translations = {
     'categoryTechnique': 'Technik',
     'categoryRest': 'Ruhetag',
     'addSession': 'Einheit hinzufügen',
+    'editSession': 'Einheit bearbeiten',
     'customCategoryLabel': 'Eigene Kategorie',
     'noSessionsPlanned': 'Kein Training geplant',
+    'planToday': 'Heute',
+    'planRestDays': 'Ruhetage',
+    'planRecentCategories': 'Zuletzt verwendet',
     'trainingTypeTechnique': 'Technik',
     'trainingTypeSparring': 'Sparring',
     'trainingTypeBoxing': 'Boxen',
@@ -296,6 +300,8 @@ const Map<String, Map<String, String>> _translations = {
         'Leg für jeden Tag fest, was du trainieren willst -- bis zu zwei Einheiten pro Tag.',
     'coachPlanIntro3':
         'So behältst du den Überblick und trainierst nicht nach Zufall.',
+    'coachPlanSummary':
+        'Auf einen Blick: wie viele Einheiten du diese Woche eingeplant hast und wie viele Ruhetage.',
     'coachTourNext': 'Weiter',
     'coachTourDone': 'Fertig',
     'coachTourSkip': 'Überspringen',
@@ -478,8 +484,12 @@ const Map<String, Map<String, String>> _translations = {
     'categoryTechnique': 'Technique',
     'categoryRest': 'Rest day',
     'addSession': 'Add session',
+    'editSession': 'Edit session',
     'customCategoryLabel': 'Custom category',
     'noSessionsPlanned': 'No training planned',
+    'planToday': 'Today',
+    'planRestDays': 'Rest days',
+    'planRecentCategories': 'Recently used',
     'trainingTypeTechnique': 'Technique',
     'trainingTypeSparring': 'Sparring',
     'trainingTypeBoxing': 'Boxing',
@@ -690,6 +700,8 @@ const Map<String, Map<String, String>> _translations = {
         'Set what you want to train each day -- up to two sessions per day.',
     'coachPlanIntro3':
         "That way you stay on track instead of training at random.",
+    'coachPlanSummary':
+        'At a glance: how many sessions you have planned this week and how many rest days.',
     'coachTourNext': 'Next',
     'coachTourDone': 'Done',
     'coachTourSkip': 'Skip',

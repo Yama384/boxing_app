@@ -490,6 +490,14 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 46,
+              // minY/maxY sind um weightPadding gepolstert (siehe Aufrufer),
+              // meist kein glatter Vielfaches des Intervalls. Ohne
+              // minIncluded/maxIncluded:false rendert fl_chart zusätzlich zu
+              // den Intervall-Ticks immer auch den exakten (krummen)
+              // Randwert -- gerundet ergibt das je nach Gewichtswerten eine
+              // doppelte Zahl am Rand.
+              minIncluded: false,
+              maxIncluded: false,
               getTitlesWidget: (value, meta) => Text(
                 '${value.round()} kg',
                 style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
@@ -501,6 +509,11 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
               showTitles: true,
               reservedSize: 28,
               interval: (maxX - minX) / 3 < 1 ? 1 : (maxX - minX) / 3,
+              // Gleicher Grund wie oben: verhindert ein doppelt gerendertes
+              // Datum am Rand, wenn der exakte erste/letzte Zeitstempel
+              // knapp neben einem Intervall-Tick landet.
+              minIncluded: false,
+              maxIncluded: false,
               getTitlesWidget: (value, meta) {
                 final date = DateTime.fromMillisecondsSinceEpoch(value.round());
                 return Padding(

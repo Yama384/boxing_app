@@ -165,6 +165,23 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
       textDirection: TextDirection.ltr,
     )..layout();
     final fieldWidth = digitsPainter.width + 24;
+    // Das globale InputDecorationTheme (main.dart) füllt Textfelder mit
+    // einer abgerundeten Box -- passend für Dialoge, aber hier groß genug,
+    // um den Fortschrittsring im Hintergrund komplett zu verdecken. Für die
+    // Ziffern im Ring wird deshalb explizit auf den schlichten Unterstrich
+    // zurückgesetzt (filled:false + eigene enabled/focusedBorder), statt die
+    // Theme-Defaults zu erben.
+    final timeInputDecoration = InputDecoration(
+      isDense: true,
+      filled: false,
+      contentPadding: const EdgeInsets.only(bottom: 2),
+      enabledBorder: const UnderlineInputBorder(
+        borderSide: BorderSide(color: Colors.white24),
+      ),
+      focusedBorder: UnderlineInputBorder(
+        borderSide: BorderSide(color: editableColor, width: 2),
+      ),
+    );
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -182,11 +199,7 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
               FilteringTextInputFormatter.digitsOnly,
               LengthLimitingTextInputFormatter(2),
             ],
-            decoration: const InputDecoration(
-              isDense: true,
-              contentPadding: EdgeInsets.only(bottom: 2),
-              border: UnderlineInputBorder(),
-            ),
+            decoration: timeInputDecoration,
           ),
         ),
         Padding(
@@ -207,11 +220,7 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
               LengthLimitingTextInputFormatter(2),
               const MaxValueTextInputFormatter(59),
             ],
-            decoration: const InputDecoration(
-              isDense: true,
-              contentPadding: EdgeInsets.only(bottom: 2),
-              border: UnderlineInputBorder(),
-            ),
+            decoration: timeInputDecoration,
           ),
         ),
       ],

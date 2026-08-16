@@ -17,6 +17,17 @@ const _categoryColors = <String, Color>{
   'categoryRest': Colors.blueGrey,
 };
 
+const _categoryEmojis = <String, String>{
+  'categoryStrength': '🏋️',
+  'categoryBoxing': '🥊',
+  'categorySparring': '🥋',
+  'categoryCardio': '🏃',
+  'categoryTechnique': '🎯',
+  'categoryRest': '😴',
+};
+
+const _customCategoryEmoji = '📌';
+
 const _customCategoryColors = <Color>[
   Colors.tealAccent,
   Colors.pinkAccent,
@@ -35,6 +46,12 @@ Color _colorForSession(TrainingSession session) {
   return _customCategoryColors[index];
 }
 
+String _emojiForSession(TrainingSession session) {
+  final key = session.categoryKey;
+  if (key != null) return _categoryEmojis[key] ?? '🔸';
+  return _customCategoryEmoji;
+}
+
 class TrainingPlanScreen extends StatefulWidget {
   const TrainingPlanScreen({super.key});
 
@@ -45,6 +62,7 @@ class TrainingPlanScreen extends StatefulWidget {
 class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
   static const _introId = 'training_plan_intro';
   final _weekKey = GlobalKey();
+  final _summaryKey = GlobalKey();
 
   @override
   void initState() {
@@ -67,13 +85,15 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
   void _startTour() {
     CoachGuide.markSeen(_introId);
     final s = AppStrings.of(AppSettings.locale.value);
+    final steps = [
+      CoachTourStep(anchorKey: _weekKey, message: s('coachPlanIntro1')),
+      CoachTourStep(anchorKey: _weekKey, message: s('coachPlanIntro2')),
+      CoachTourStep(anchorKey: _summaryKey, message: s('coachPlanSummary')),
+      CoachTourStep(anchorKey: _weekKey, message: s('coachPlanIntro3')),
+    ].where((step) => step.anchorKey.currentContext != null).toList();
     showCoachTour(
       context,
-      steps: [
-        CoachTourStep(anchorKey: _weekKey, message: s('coachPlanIntro1')),
-        CoachTourStep(anchorKey: _weekKey, message: s('coachPlanIntro2')),
-        CoachTourStep(anchorKey: _weekKey, message: s('coachPlanIntro3')),
-      ],
+      steps: steps,
       nextLabel: s('coachTourNext'),
       doneLabel: s('coachTourDone'),
       skipLabel: s('coachTourSkip'),
@@ -91,13 +111,36 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
     TrainingPlanData.removeSession(day, session);
   }
 
-  Future<void> _showAddSessionDialog(
+  /// Sammelt alle bereits im Plan verwendeten eigenen Kategorienamen, damit
+  /// sie im Dialog als Schnellauswahl angeboten werden können, statt sie bei
+  /// jeder neuen Einheit erneut eintippen zu müssen. Reihenfolge: erstes
+  /// Auftreten Montag bis Sonntag, Duplikate entfernt.
+  List<String> _recentCustomCategories() {
+    final seen = <String>{};
+    final names = <String>[];
+    for (final day in Weekday.values) {
+      for (final session in TrainingPlanData.week.value[day]!) {
+        final name = session.customCategory;
+        if (name == null) continue;
+        if (seen.add(name)) names.add(name);
+      }
+    }
+    return names.take(8).toList();
+  }
+
+  Future<void> _showSessionDialog(
     BuildContext context,
     AppStrings s,
-    Weekday day,
-  ) async {
-    final customController = TextEditingController();
-    String? selectedKey;
+    Weekday day, {
+    TrainingSession? existing,
+  }) async {
+    final customController = TextEditingController(
+      text: existing?.customCategory ?? '',
+    );
+    String? selectedKey = existing?.categoryKey;
+    final recentCategories = _recentCustomCategories()
+        .where((name) => name != existing?.customCategory)
+        .toList();
 
     final session = await showDialog<TrainingSession>(
       context: context,
@@ -107,7 +150,7 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
             final canAdd =
                 selectedKey != null || customController.text.trim().isNotEmpty;
             return AlertDialog(
-              title: Text(s('addSession')),
+              title: Text(s(existing == null ? 'addSession' : 'editSession')),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -119,7 +162,7 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
                       children: [
                         for (final key in predefinedCategoryKeys)
                           ChoiceChip(
-                            label: Text(s(key)),
+                            label: Text('${_categoryEmojis[key]} ${s(key)}'),
                             selected: selectedKey == key,
                             onSelected: (_) => setDialogState(() {
                               selectedKey = selectedKey == key ? null : key;
@@ -138,6 +181,33 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
                         if (value.trim().isNotEmpty) selectedKey = null;
                       }),
                     ),
+                    if (recentCategories.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        s('planRecentCategories'),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final name in recentCategories)
+                            ActionChip(
+                              avatar: const Text(_customCategoryEmoji),
+                              label: Text(name),
+                              onPressed: () => setDialogState(() {
+                                customController.text = name;
+                                selectedKey = null;
+                              }),
+                            ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -156,7 +226,7 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
                                   customCategory: customController.text.trim(),
                                 ),
                         ),
-                  child: Text(s('add')),
+                  child: Text(s(existing == null ? 'add' : 'save')),
                 ),
               ],
             );
@@ -165,7 +235,10 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
       },
     );
 
-    if (session != null) {
+    if (session == null) return;
+    if (existing != null) {
+      TrainingPlanData.updateSession(day, existing, session);
+    } else {
       TrainingPlanData.addSession(day, session);
     }
   }
@@ -177,36 +250,43 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
     TrainingSession session,
   ) {
     final color = _colorForSession(session);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.16),
+    return Material(
+      color: color.withValues(alpha: 0.16),
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color, width: 1.4),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 9,
-            height: 9,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        onTap: () =>
+            _showSessionDialog(context, s, day, existing: session),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(10, 8, 4, 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: color, width: 1.4),
           ),
-          const SizedBox(width: 8),
-          Text(
-            session.displayCategory(s),
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(_emojiForSession(session), style: const TextStyle(fontSize: 14)),
+              const SizedBox(width: 6),
+              Text(
+                session.displayCategory(s),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+              InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: () => _deleteSession(context, s, day, session),
+                child: const Padding(
+                  padding: EdgeInsets.all(6),
+                  child: Icon(Icons.close, size: 15, color: Colors.white54),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 6),
-          GestureDetector(
-            onTap: () => _deleteSession(context, s, day, session),
-            child: const Icon(Icons.close, size: 16, color: Colors.white54),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -218,6 +298,7 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
     List<TrainingSession> sessions,
   ) {
     final primary = Theme.of(context).colorScheme.primary;
+    final isToday = day.index == DateTime.now().weekday - 1;
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 14),
@@ -225,6 +306,9 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF1C1C1E),
         borderRadius: BorderRadius.circular(20),
+        border: isToday
+            ? Border.all(color: primary.withValues(alpha: 0.7), width: 1.6)
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -232,43 +316,145 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                weekdayLabel(day, s).toUpperCase(),
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.2,
-                  color: primary,
-                ),
+              Row(
+                children: [
+                  Text(
+                    weekdayLabel(day, s).toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.2,
+                      color: primary,
+                    ),
+                  ),
+                  if (isToday) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: primary,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        s('planToday').toUpperCase(),
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.6,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
               if (sessions.length < 2)
                 InkWell(
                   borderRadius: BorderRadius.circular(20),
-                  onTap: () => _showAddSessionDialog(context, s, day),
+                  onTap: () => _showSessionDialog(context, s, day),
                   child: Icon(Icons.add_circle_outline, color: primary),
                 ),
             ],
           ),
           const SizedBox(height: 12),
-          if (sessions.isEmpty)
-            Text(
-              s('noSessionsPlanned'),
-              style: TextStyle(
-                color: Colors.grey.shade500,
-                fontStyle: FontStyle.italic,
-                fontSize: 13,
-              ),
-            )
-          else
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final session in sessions)
-                  _sessionCard(context, s, day, session),
-              ],
-            ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOut,
+            alignment: Alignment.topLeft,
+            child: sessions.isEmpty
+                ? Text(
+                    s('noSessionsPlanned'),
+                    style: TextStyle(
+                      color: Colors.grey.shade500,
+                      fontStyle: FontStyle.italic,
+                      fontSize: 13,
+                    ),
+                  )
+                : Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final session in sessions)
+                        _sessionCard(context, s, day, session),
+                    ],
+                  ),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _summaryTile(String value, String label, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: color,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _summaryCard(
+    BuildContext context,
+    AppStrings s,
+    Map<Weekday, List<TrainingSession>> week,
+  ) {
+    final primary = Theme.of(context).colorScheme.primary;
+    var trainingSessions = 0;
+    var restDays = 0;
+    for (final sessions in week.values) {
+      if (sessions.isEmpty) continue;
+      if (sessions.every((session) => session.isRest)) {
+        restDays++;
+      } else {
+        trainingSessions += sessions.where((session) => !session.isRest).length;
+      }
+    }
+    return KeyedSubtree(
+      key: _summaryKey,
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1C1C1E),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          children: [
+            _summaryTile(
+              '$trainingSessions',
+              s('analysisSessionsInRange'),
+              primary,
+            ),
+            const SizedBox(width: 12),
+            _summaryTile('$restDays', s('planRestDays'), Colors.blueGrey),
+          ],
+        ),
       ),
     );
   }
@@ -296,6 +482,7 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
                 key: _weekKey,
                 padding: const EdgeInsets.all(16),
                 children: [
+                  _summaryCard(context, s, week),
                   for (final day in Weekday.values)
                     _dayCard(context, s, day, week[day]!),
                 ],

@@ -140,12 +140,20 @@ class _CoachTourOverlayState extends State<_CoachTourOverlay> {
   Widget _buildBubble(BuildContext context, CoachTourStep step, bool isLast, MediaQueryData mq, Color primary) {
     final rect = _targetRect!;
     final screenHeight = mq.size.height;
+    // Manche Schritte markieren bewusst einen großen Bereich statt einer
+    // einzelnen Karte (z.B. generische Intro-Texte ohne eigenes Ziel-
+    // Widget, die auf die ganze Liste zeigen). Für so ein Rechteck würde
+    // "unterhalb/oberhalb des Rechtecks" die Blase über den Bildschirmrand
+    // hinausschieben -- stattdessen fest am unteren Rand andocken.
+    final isFullArea = rect.height > screenHeight * 0.6;
     final spaceBelow = screenHeight - rect.bottom - mq.padding.bottom;
-    final showBelow = spaceBelow > 170 || rect.top < 170;
+    final showBelow = !isFullArea && (spaceBelow > 170 || rect.top < 170);
 
     return Positioned(
-      top: showBelow ? rect.bottom + 12 : null,
-      bottom: showBelow ? null : (screenHeight - rect.top) + 12,
+      top: isFullArea ? null : (showBelow ? rect.bottom + 12 : null),
+      bottom: isFullArea
+          ? mq.padding.bottom + 20
+          : (showBelow ? null : (screenHeight - rect.top) + 12),
       left: 20,
       right: 20,
       child: TweenAnimationBuilder<double>(

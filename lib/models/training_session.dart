@@ -37,6 +37,8 @@ class TrainingSession {
   final String? categoryKey;
   final String? customCategory;
 
+  bool get isRest => categoryKey == 'categoryRest';
+
   String displayCategory(AppStrings s) => customCategory ?? s(categoryKey!);
 
   Map<String, dynamic> toJson() => {

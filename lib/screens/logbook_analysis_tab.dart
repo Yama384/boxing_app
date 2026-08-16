@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import '../app_strings.dart';
 import '../logbook_data.dart';
 import '../models/improvement_goal.dart';
@@ -323,6 +324,14 @@ class _LogbookAnalysisTabState extends State<LogbookAnalysisTab> {
                 showTitles: true,
                 reservedSize: 26,
                 interval: 1,
+                // minY/maxY sind bewusst um 0.5 gepolstert (siehe Aufrufer),
+                // damit die Linie nicht am Rand klebt. Ohne minIncluded/
+                // maxIncluded:false rendert fl_chart zusätzlich zu den
+                // Intervall-Ticks (1,2,3,...) immer auch den exakten Rand-
+                // wert (0.5, 5.5) -- gerundet ergäbe das eine doppelte "1"
+                // am Anfang und eine ungültige "6" am Ende der Skala.
+                minIncluded: false,
+                maxIncluded: false,
                 getTitlesWidget: (value, meta) => Text(
                   '${value.round()}',
                   style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
@@ -334,6 +343,11 @@ class _LogbookAnalysisTabState extends State<LogbookAnalysisTab> {
                 showTitles: true,
                 reservedSize: 24,
                 interval: (maxX - minX) / 3 < 1 ? 1 : (maxX - minX) / 3,
+                // Gleicher Grund wie oben: verhindert ein doppelt
+                // gerendertes Datum am Rand, wenn der exakte erste/letzte
+                // Zeitstempel knapp neben einem Intervall-Tick landet.
+                minIncluded: false,
+                maxIncluded: false,
                 getTitlesWidget: (value, meta) {
                   final date = DateTime.fromMillisecondsSinceEpoch(
                     value.round(),
@@ -890,6 +904,14 @@ class _LogbookAnalysisTabState extends State<LogbookAnalysisTab> {
           valueListenable: LogbookData.goals,
           builder: (context, goals, _) {
             return ListView(
+              // ListView virtualisiert Kinder außerhalb des sichtbaren
+              // Bereichs (+ Standard-cacheExtent von 250px) -- ohne
+              // großzügigeren cacheExtent haben GlobalKeys weit unten (z.B.
+              // die Trend-Charts) beim Guide-Start noch kein currentContext,
+              // obwohl die Karten da sind. Das ließ den Guide fälschlich
+              // "fehlende" Schritte überspringen. Großzügiger fixer Wert
+              // statt double.infinity, da die Liste klein/begrenzt ist.
+              scrollCacheExtent: const ScrollCacheExtent.pixels(3000),
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
               children: [
                 KeyedSubtree(

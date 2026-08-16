@@ -67,4 +67,19 @@ class TrainingPlanData {
     };
     _persist();
   }
+
+  static void updateSession(
+    Weekday day,
+    TrainingSession oldSession,
+    TrainingSession newSession,
+  ) {
+    week.value = {
+      ...week.value,
+      day: [
+        for (final s in week.value[day]!)
+          if (identical(s, oldSession)) newSession else s,
+      ],
+    };
+    _persist();
+  }
 }

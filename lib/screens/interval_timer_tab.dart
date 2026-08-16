@@ -231,17 +231,43 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
     final fieldStyle = TextStyle(
       fontSize: 28,
       fontWeight: FontWeight.w600,
+      fontFeatures: _timeFontFeatures,
       color: color,
     );
 
+    // Feste Pixelbreiten sind Rätselraten (siehe simple_timer_tab.dart) --
+    // die Breite direkt aus dem Style ausmessen, statt eines fixen Werts,
+    // der bei diesem Font zu wenig Platz für zwei Ziffern ließ.
+    final digitsPainter = TextPainter(
+      text: TextSpan(text: '00', style: fieldStyle),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    final fieldWidth = digitsPainter.width + 20;
+
+    // Das globale InputDecorationTheme (main.dart) füllt Textfelder mit
+    // einer abgerundeten Box und großzügigem Innenabstand -- passend für
+    // Dialoge, aber hier zu breit für die schmalen Ziffernfelder (führte zum
+    // Abschneiden der zweiten Ziffer). Stattdessen der schlichte Unterstrich,
+    // wie auch beim einfachen Timer.
+    final fieldDecoration = InputDecoration(
+      isDense: true,
+      filled: false,
+      contentPadding: const EdgeInsets.symmetric(vertical: 4),
+      enabledBorder: const UnderlineInputBorder(
+        borderSide: BorderSide(color: Colors.white24),
+      ),
+      focusedBorder: UnderlineInputBorder(
+        borderSide: BorderSide(color: color, width: 2),
+      ),
+    );
+
     Widget numberField(
-      TextEditingController controller,
-      double width, {
+      TextEditingController controller, {
       FocusNode? focusNode,
       int? maxValue,
     }) {
       return SizedBox(
-        width: width,
+        width: fieldWidth,
         child: TextField(
           controller: controller,
           focusNode: focusNode,
@@ -253,10 +279,7 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
             LengthLimitingTextInputFormatter(2),
             if (maxValue != null) MaxValueTextInputFormatter(maxValue),
           ],
-          decoration: const InputDecoration(
-            isDense: true,
-            border: UnderlineInputBorder(),
-          ),
+          decoration: fieldDecoration,
         ),
       );
     }
@@ -265,25 +288,20 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
       children: [
         Text(s('rounds'), style: labelStyle),
         const SizedBox(height: 4),
-        numberField(_roundsController, 70),
+        numberField(_roundsController),
         const SizedBox(height: 24),
         Text(s('roundDuration'), style: labelStyle),
         const SizedBox(height: 4),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            numberField(
-              _roundMinutesController,
-              70,
-              focusNode: _roundMinutesFocus,
-            ),
+            numberField(_roundMinutesController, focusNode: _roundMinutesFocus),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Text(':', style: fieldStyle),
             ),
             numberField(
               _roundSecondsController,
-              70,
               focusNode: _roundSecondsFocus,
               maxValue: 59,
             ),
@@ -295,18 +313,13 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            numberField(
-              _pauseMinutesController,
-              70,
-              focusNode: _pauseMinutesFocus,
-            ),
+            numberField(_pauseMinutesController, focusNode: _pauseMinutesFocus),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Text(':', style: fieldStyle),
             ),
             numberField(
               _pauseSecondsController,
-              70,
               focusNode: _pauseSecondsFocus,
               maxValue: 59,
             ),
