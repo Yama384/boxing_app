@@ -68,5 +68,22 @@
 		</array>
 		<key>UIStatusBarHidden</key>
 		<false/>
+		<!-- flutter_foreground_task: erlaubt kurze Hintergrund-Ausführung
+		     (iOS gibt dafür nur ca. 30s alle 15min, siehe Paket-Doku;
+		     die eigentliche Zuverlässigkeit auf iOS kommt über geplante
+		     lokale Benachrichtigungen, nicht über diesen Background-Mode). -->
+		<key>BGTaskSchedulerPermittedIdentifiers</key>
+		<array>
+			<string>com.pravera.flutter_foreground_task.refresh</string>
+		</array>
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>fetch</string>
+		</array>
+		<!-- Live Activity (Sperrbildschirm/Dynamic Island) für den
+		     Timer-Countdown: die zugehörige Widget Extension muss manuell
+		     in Xcode angelegt werden, siehe Anleitung. -->
+		<key>NSSupportsLiveActivities</key>
+		<true/>
 	</dict>
 </plist>

@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import '../app_settings.dart';
 import '../app_strings.dart';
 import '../max_value_text_input_formatter.dart';
+import '../services/background_timer_controller.dart';
+import '../services/timer_foreground_task.dart';
 import '../time_format.dart';
 import '../widgets/circular_timer_display.dart';
 
@@ -16,7 +18,7 @@ class SimpleTimerTab extends StatefulWidget {
 }
 
 class _SimpleTimerTabState extends State<SimpleTimerTab>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   final _minutesController = TextEditingController(text: '03');
   final _secondsController = TextEditingController(text: '00');
   final _minutesFocus = FocusNode();
@@ -34,6 +36,13 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
 
   Timer? _timer;
   int _totalSeconds = 3 * 60;
+
+  // Ziel-Zeitpunkt statt Countdown-Zähler: die verbleibende Zeit wird immer
+  // aus der aktuellen Uhrzeit neu berechnet, statt Sekunde für Sekunde
+  // heruntergezählt. Dadurch bleibt die Anzeige exakt, auch wenn die App
+  // zwischenzeitlich im Hintergrund war (kurz angehalten oder komplett
+  // pausiert) -- ein reiner Zähler würde in der Zeit einfach stehen bleiben.
+  DateTime? _endTime;
   int _remainingSeconds = 3 * 60;
   bool _isRunning = false;
   bool _hasStarted = false;
@@ -44,6 +53,7 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _minutesFocus.addListener(
       () => _padOnBlur(_minutesFocus, _minutesController),
     );
@@ -64,8 +74,35 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
     }
   }
 
+  // App geht in den Hintergrund (Sperrbildschirm, Home-Taste, App-Wechsel)
+  // oder kommt zurück -- läuft gerade ein Timer, übernimmt currently ein
+  // Vordergrunddienst/geplante Benachrichtigung die Anzeige/den Alarm, bis
+  // die App wieder sichtbar ist (siehe BackgroundTimerController).
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (!_isRunning || _endTime == null) return;
+    if (state == AppLifecycleState.paused) {
+      _timer?.cancel();
+      final s = AppStrings.of(AppSettings.locale.value);
+      BackgroundTimerController.enterBackground([
+        TimerPhase(
+          at: _endTime!,
+          activeLabel: s('timer'),
+          alertTitle: s('timeUp'),
+          alertBody: s('timer'),
+          sound: 'bell',
+        ),
+      ]);
+    } else if (state == AppLifecycleState.resumed) {
+      BackgroundTimerController.leaveBackground();
+      _syncFromEndTime();
+      if (_remainingSeconds > 0) _startTicking();
+    }
+  }
+
   void _start() {
     if (_isRunning) return;
+    BackgroundTimerController.requestPermissions();
 
     if (!_hasStarted) {
       final minutes = int.tryParse(_minutesController.text) ?? 0;
@@ -79,23 +116,49 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
         ..value = 0;
     }
 
+    _endTime = DateTime.now().add(Duration(seconds: _remainingSeconds));
     setState(() {
       _isRunning = true;
       _hasStarted = true;
     });
 
     _ringController.forward();
+    _startTicking();
+  }
 
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_remainingSeconds <= 1) {
-        timer.cancel();
-        setState(() {
-          _remainingSeconds = 0;
-          _isRunning = false;
-        });
-        _playAlert();
+  void _startTicking() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
+  }
+
+  void _tick() {
+    final remaining = _endTime!.difference(DateTime.now()).inSeconds;
+    if (remaining <= 0) {
+      _timer?.cancel();
+      setState(() {
+        _remainingSeconds = 0;
+        _isRunning = false;
+      });
+      _playAlert();
+    } else {
+      setState(() => _remainingSeconds = remaining);
+    }
+  }
+
+  // Nach Rückkehr aus dem Hintergrund: verbleibende Zeit aus dem
+  // gespeicherten Ziel-Zeitpunkt neu berechnen statt weiterzuzählen. Kein
+  // erneuter _playAlert() beim Übergang in den fertigen Zustand hier --
+  // falls der Timer während des Hintergrunds abgelaufen ist, hat die
+  // Benachrichtigung den Ton bereits gespielt.
+  void _syncFromEndTime() {
+    final remaining = _endTime!.difference(DateTime.now()).inSeconds;
+    setState(() {
+      if (remaining <= 0) {
+        _remainingSeconds = 0;
+        _isRunning = false;
+        _ringController.value = 1;
       } else {
-        setState(() => _remainingSeconds--);
+        _remainingSeconds = remaining;
       }
     });
   }
@@ -103,6 +166,7 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
   void _pause() {
     _timer?.cancel();
     _ringController.stop();
+    BackgroundTimerController.leaveBackground();
     setState(() => _isRunning = false);
   }
 
@@ -111,6 +175,8 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
     _ringController
       ..stop()
       ..value = 0;
+    BackgroundTimerController.leaveBackground();
+    _endTime = null;
     setState(() {
       _isRunning = false;
       _hasStarted = false;
@@ -125,6 +191,7 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     _ringController.dispose();
     _minutesController.dispose();

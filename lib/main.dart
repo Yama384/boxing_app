@@ -5,6 +5,8 @@ import 'app_settings.dart';
 import 'coach_guide.dart';
 import 'logbook_data.dart';
 import 'screens/home_screen.dart';
+import 'services/background_timer_controller.dart';
+import 'services/timer_notifications.dart';
 import 'strength_data.dart';
 import 'training_plan_data.dart';
 
@@ -15,6 +17,8 @@ void main() async {
   await TrainingPlanData.load();
   await CoachGuide.load();
   await AchievementsData.load();
+  await TimerNotifications.init();
+  BackgroundTimerController.initApp();
   runApp(const MyApp());
 }
 

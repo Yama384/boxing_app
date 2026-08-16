@@ -5,10 +5,29 @@ import 'package:flutter/services.dart';
 import '../app_settings.dart';
 import '../app_strings.dart';
 import '../max_value_text_input_formatter.dart';
+import '../services/background_timer_controller.dart';
+import '../services/timer_foreground_task.dart';
 import '../time_format.dart';
 import '../widgets/circular_timer_display.dart';
 
 enum _Phase { round, pause }
+
+/// Rein rechnerischer Phasenübergang ohne Seiteneffekt: was kommt nach
+/// [phase]/[round]? `null` heißt, das Training ist damit beendet. Wird
+/// sowohl von der Live-Anzeige (_advancePhase) als auch von der
+/// Vorausberechnung für den Hintergrund-Dienst (_computeRemainingPhases)
+/// genutzt, damit beide niemals auseinanderlaufen können.
+class _Step {
+  const _Step({
+    required this.phase,
+    required this.round,
+    required this.durationSeconds,
+  });
+
+  final _Phase phase;
+  final int round;
+  final int durationSeconds;
+}
 
 class IntervalTimerTab extends StatefulWidget {
   const IntervalTimerTab({super.key});
@@ -18,7 +37,7 @@ class IntervalTimerTab extends StatefulWidget {
 }
 
 class _IntervalTimerTabState extends State<IntervalTimerTab>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   final _roundsController = TextEditingController(text: '3');
   final _roundMinutesController = TextEditingController(text: '03');
   final _roundSecondsController = TextEditingController(text: '00');
@@ -42,6 +61,12 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
   _Phase _phase = _Phase.round;
   int _remainingSeconds = 3 * 60;
 
+  // Ziel-Zeitpunkt der aktuellen Phase statt reinem Countdown -- siehe
+  // simple_timer_tab.dart für die Begründung. Hier zusätzlich wichtig, weil
+  // beim Rückkehren aus dem Hintergrund ggf. mehrere Phasen (Runde -> Pause
+  // -> nächste Runde ...) bereits abgelaufen sein können.
+  DateTime? _endTime;
+
   bool _isRunning = false;
   bool _hasStarted = false;
   bool _isFinished = false;
@@ -51,6 +76,7 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _ringController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 1),
@@ -78,8 +104,78 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
     }
   }
 
+  _Step? _nextStep(_Phase phase, int round) {
+    if (phase == _Phase.round && round >= _totalRounds) return null;
+    if (phase == _Phase.round && _pauseDuration > 0) {
+      return _Step(
+        phase: _Phase.pause,
+        round: round,
+        durationSeconds: _pauseDuration,
+      );
+    }
+    return _Step(
+      phase: _Phase.round,
+      round: round + 1,
+      durationSeconds: _roundDuration,
+    );
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (!_isRunning || _endTime == null) return;
+    if (state == AppLifecycleState.paused) {
+      _timer?.cancel();
+      final s = AppStrings.of(AppSettings.locale.value);
+      BackgroundTimerController.enterBackground(_computeRemainingPhases(s));
+    } else if (state == AppLifecycleState.resumed) {
+      BackgroundTimerController.leaveBackground();
+      _syncFromEndTime();
+      if (_isRunning) _startTicking();
+    }
+  }
+
+  /// Alle noch kommenden Phasenwechsel ab dem aktuellen Ziel-Zeitpunkt --
+  /// für den Hintergrund-Dienst/die geplanten Benachrichtigungen. Auf 60
+  /// begrenzt, damit auf iOS nie mehr als das dortige Limit für geplante
+  /// Benachrichtigungen (64) erreicht wird -- für ein reales Training weit
+  /// mehr als genug.
+  List<TimerPhase> _computeRemainingPhases(AppStrings s) {
+    final phases = <TimerPhase>[];
+    var time = _endTime!;
+    var phase = _phase;
+    var round = _currentRound;
+
+    while (phases.length < 60) {
+      final next = _nextStep(phase, round);
+      final sound = phase == _Phase.round ? 'bell' : 'buzzer';
+      final activeLabel = phase == _Phase.round
+          ? '${s('round')} $round / $_totalRounds'
+          : s('pause');
+      final alertTitle = next == null
+          ? s('trainingDone')
+          : (next.phase == _Phase.pause
+                ? s('pause')
+                : '${s('round')} ${next.round} / $_totalRounds');
+      phases.add(
+        TimerPhase(
+          at: time,
+          activeLabel: activeLabel,
+          alertTitle: alertTitle,
+          alertBody: s('timer'),
+          sound: sound,
+        ),
+      );
+      if (next == null) break;
+      time = time.add(Duration(seconds: next.durationSeconds));
+      phase = next.phase;
+      round = next.round;
+    }
+    return phases;
+  }
+
   void _start() {
     if (_isRunning) return;
+    BackgroundTimerController.requestPermissions();
 
     if (!_hasStarted) {
       final rounds = int.tryParse(_roundsController.text) ?? 0;
@@ -102,25 +198,34 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
         ..value = 0;
     }
 
+    _endTime = DateTime.now().add(Duration(seconds: _remainingSeconds));
     setState(() {
       _isRunning = true;
       _hasStarted = true;
     });
 
     _ringController.forward();
-
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_remainingSeconds <= 1) {
-        _advancePhase(timer);
-      } else {
-        setState(() => _remainingSeconds--);
-      }
-    });
+    _startTicking();
   }
 
-  void _advancePhase(Timer timer) {
-    if (_phase == _Phase.round && _currentRound >= _totalRounds) {
-      timer.cancel();
+  void _startTicking() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
+  }
+
+  void _tick() {
+    final remaining = _endTime!.difference(DateTime.now()).inSeconds;
+    if (remaining <= 0) {
+      _advancePhase();
+    } else {
+      setState(() => _remainingSeconds = remaining);
+    }
+  }
+
+  void _advancePhase() {
+    final next = _nextStep(_phase, _currentRound);
+    if (next == null) {
+      _timer?.cancel();
       _ringController.stop();
       setState(() {
         _remainingSeconds = 0;
@@ -132,41 +237,70 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
     }
 
     _playAlert(_phase);
+    setState(() {
+      _phase = next.phase;
+      _currentRound = next.round;
+      _remainingSeconds = next.durationSeconds;
+    });
+    _endTime = DateTime.now().add(Duration(seconds: next.durationSeconds));
+    _ringController
+      ..duration = Duration(seconds: next.durationSeconds)
+      ..value = 0
+      ..forward();
+  }
 
-    final int nextPhaseDuration;
-    if (_phase == _Phase.round) {
-      if (_pauseDuration > 0) {
-        nextPhaseDuration = _pauseDuration;
+  // Nach Rückkehr aus dem Hintergrund: springt über alle Phasen, die
+  // inzwischen abgelaufen sind (ggf. mehrere -- Runde, Pause, nächste
+  // Runde, ...), bis die aktuell laufende Phase gefunden ist, und setzt
+  // Anzeige + Ring exakt auf deren Fortschritt. Kein erneutes _playAlert()
+  // hier -- falls Phasen während des Hintergrunds zu Ende gingen, hat der
+  // Hintergrund-Dienst/die Benachrichtigung den Ton bereits gespielt.
+  void _syncFromEndTime() {
+    var time = _endTime!;
+    var phase = _phase;
+    var round = _currentRound;
+    final now = DateTime.now();
+
+    while (time.isBefore(now)) {
+      final next = _nextStep(phase, round);
+      if (next == null) {
         setState(() {
-          _phase = _Phase.pause;
-          _remainingSeconds = _pauseDuration;
+          _phase = phase;
+          _currentRound = round;
+          _remainingSeconds = 0;
+          _isRunning = false;
+          _isFinished = true;
         });
-      } else {
-        nextPhaseDuration = _roundDuration;
-        setState(() {
-          _currentRound++;
-          _phase = _Phase.round;
-          _remainingSeconds = _roundDuration;
-        });
+        _timer?.cancel();
+        _ringController
+          ..stop()
+          ..value = 1;
+        return;
       }
-    } else {
-      nextPhaseDuration = _roundDuration;
-      setState(() {
-        _currentRound++;
-        _phase = _Phase.round;
-        _remainingSeconds = _roundDuration;
-      });
+      time = time.add(Duration(seconds: next.durationSeconds));
+      phase = next.phase;
+      round = next.round;
     }
 
+    final remaining = time.difference(now).inSeconds;
+    final phaseDuration = phase == _Phase.round ? _roundDuration : _pauseDuration;
+    final elapsed = (phaseDuration - remaining).clamp(0, phaseDuration);
+    setState(() {
+      _phase = phase;
+      _currentRound = round;
+      _remainingSeconds = remaining;
+    });
+    _endTime = time;
     _ringController
-      ..duration = Duration(seconds: nextPhaseDuration)
-      ..value = 0
+      ..duration = Duration(seconds: phaseDuration)
+      ..value = phaseDuration == 0 ? 0 : elapsed / phaseDuration
       ..forward();
   }
 
   void _pause() {
     _timer?.cancel();
     _ringController.stop();
+    BackgroundTimerController.leaveBackground();
     setState(() => _isRunning = false);
   }
 
@@ -175,6 +309,8 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
     _ringController
       ..stop()
       ..value = 0;
+    BackgroundTimerController.leaveBackground();
+    _endTime = null;
     setState(() {
       _isRunning = false;
       _hasStarted = false;
@@ -198,6 +334,7 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     _ringController.dispose();
     _roundsController.dispose();
