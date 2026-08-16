@@ -1,19 +1,6 @@
 //
 //  TimerLiveActivity.swift
-//  Referenz-Datei -- NICHT Teil des Xcode-Projekts.
-//
-//  So einbinden:
-//  1. In Xcode (ios/Runner.xcworkspace): File > New > Target... > Widget
-//     Extension. Produktname z.B. "TimerWidget", "Include Live Activity"
-//     anhaken, "Embed in Application: Runner".
-//  2. Xcode legt dabei automatisch eine Datei mit ähnlichem Namen an
-//     (z.B. TimerWidgetLiveActivity.swift) -- deren Inhalt komplett durch
-//     den Inhalt dieser Datei ersetzen.
-//  3. Die Konstante `appGroupId` unten muss exakt mit
-//     `_liveActivityAppGroupId` in lib/services/background_timer_controller.dart
-//     übereinstimmen.
-//  4. Ausführliche Schritt-für-Schritt-Anleitung: siehe
-//     ios/LIVE_ACTIVITY_SETUP.md im gleichen Ordner wie diese Datei.
+//  TimerWidgetExtension
 //
 
 import ActivityKit

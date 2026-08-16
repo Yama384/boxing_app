@@ -36,7 +36,7 @@ ist bereits fertig -- es fehlt nur dieser native Teil.
    Widget Extension):
    - Target auswählen → `Signing & Capabilities` → `+ Capability` → `App
      Groups`
-   - Neue Gruppe anlegen, z.B. `group.com.example.boxingApp.timer`
+   - Neue Gruppe anlegen, z.B. `group.com.yama384.boxingapp.timer`
    - **Exakt dieselbe ID** bei beiden Targets ankreuzen.
    - Diese ID muss mit der Konstante `_liveActivityAppGroupId` in
      `lib/services/background_timer_controller.dart` übereinstimmen (dort

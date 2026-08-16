@@ -6,7 +6,7 @@ import 'timer_notifications.dart';
 
 /// Muss mit der App Group ID übereinstimmen, die beim manuellen Xcode-Setup
 /// für die Widget Extension vergeben wird (siehe ios/LIVE_ACTIVITY_SETUP.md).
-const _liveActivityAppGroupId = 'group.com.example.boxingApp.timer';
+const _liveActivityAppGroupId = 'group.com.yama384.boxingapp.timer';
 
 /// Koordiniert, was passiert, wenn ein laufender Timer/Intervall in den
 /// Hintergrund geht bzw. wieder in den Vordergrund kommt:
