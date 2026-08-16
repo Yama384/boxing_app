@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../app_settings.dart';
 import '../app_strings.dart';
+import '../services/background_timer_controller.dart';
 import '../time_format.dart';
 import '../widgets/circular_timer_display.dart';
 
@@ -12,34 +13,85 @@ class StopwatchTab extends StatefulWidget {
   State<StopwatchTab> createState() => _StopwatchTabState();
 }
 
-class _StopwatchTabState extends State<StopwatchTab> {
+class _StopwatchTabState extends State<StopwatchTab> with WidgetsBindingObserver {
   Timer? _timer;
-  int _seconds = 0;
+
+  // Wie bei den anderen Tabs: verstrichene Zeit wird aus einem festen
+  // Start-Zeitpunkt neu berechnet statt hochgezählt, damit sie auch nach
+  // einem Aufenthalt im Hintergrund (wo der Dart-Timer nicht zuverlässig
+  // weiterläuft) exakt stimmt. _baseSeconds sammelt die Zeit aus bereits
+  // abgeschlossenen Lauf-Abschnitten vor einer Pause.
+  int _baseSeconds = 0;
+  DateTime? _segmentStart;
   bool _isRunning = false;
+
+  int get _seconds {
+    if (_isRunning && _segmentStart != null) {
+      return _baseSeconds + DateTime.now().difference(_segmentStart!).inSeconds;
+    }
+    return _baseSeconds;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (!_isRunning) return;
+    if (state == AppLifecycleState.paused) {
+      _timer?.cancel();
+    } else if (state == AppLifecycleState.resumed) {
+      setState(() {});
+      _startTicking();
+    }
+  }
 
   void _start() {
     if (_isRunning) return;
+    BackgroundTimerController.requestPermissions();
+    _segmentStart = DateTime.now();
     setState(() => _isRunning = true);
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() => _seconds++);
+
+    final s = AppStrings.of(AppSettings.locale.value);
+    BackgroundTimerController.startStopwatchLiveActivity(
+      s('stopwatch'),
+      _segmentStart!.subtract(Duration(seconds: _baseSeconds)),
+    );
+
+    _startTicking();
+  }
+
+  void _startTicking() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      setState(() {});
     });
   }
 
   void _pause() {
+    _baseSeconds = _seconds;
+    _segmentStart = null;
     _timer?.cancel();
+    BackgroundTimerController.endLiveActivity();
     setState(() => _isRunning = false);
   }
 
   void _reset() {
     _timer?.cancel();
+    BackgroundTimerController.endLiveActivity();
     setState(() {
       _isRunning = false;
-      _seconds = 0;
+      _baseSeconds = 0;
+      _segmentStart = null;
     });
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     super.dispose();
   }

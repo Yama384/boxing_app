@@ -122,6 +122,17 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
       _hasStarted = true;
     });
 
+    final s = AppStrings.of(AppSettings.locale.value);
+    BackgroundTimerController.startLiveActivity(
+      TimerPhase(
+        at: _endTime!,
+        activeLabel: s('timer'),
+        alertTitle: s('timeUp'),
+        alertBody: s('timer'),
+        sound: 'bell',
+      ),
+    );
+
     _ringController.forward();
     _startTicking();
   }
@@ -139,6 +150,7 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
         _remainingSeconds = 0;
         _isRunning = false;
       });
+      BackgroundTimerController.endLiveActivity();
       _playAlert();
     } else {
       setState(() => _remainingSeconds = remaining);
@@ -161,12 +173,14 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
         _remainingSeconds = remaining;
       }
     });
+    if (remaining <= 0) BackgroundTimerController.endLiveActivity();
   }
 
   void _pause() {
     _timer?.cancel();
     _ringController.stop();
     BackgroundTimerController.leaveBackground();
+    BackgroundTimerController.endLiveActivity();
     setState(() => _isRunning = false);
   }
 
@@ -175,6 +189,7 @@ class _SimpleTimerTabState extends State<SimpleTimerTab>
     _ringController
       ..stop()
       ..value = 0;
+    BackgroundTimerController.endLiveActivity();
     BackgroundTimerController.leaveBackground();
     _endTime = null;
     setState(() {

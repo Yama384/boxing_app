@@ -19,7 +19,9 @@
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
+		A190B515EABCDB4FB35C0128 /* buzzer.wav in Resources */ = {isa = PBXBuildFile; fileRef = F580DD4914728AA9502A5763 /* buzzer.wav */; };
 		C41329C107A61FAAE9F6CD7E /* TimerWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFC932EC9615663FB52DD5C8 /* TimerWidgetBundle.swift */; };
+		DAC09D78B0B885FCCC49C616 /* bell.wav in Resources */ = {isa = PBXBuildFile; fileRef = 396904640717CE2D2916D5BB /* bell.wav */; };
 		EE3D317209C0381B22CB9B1F /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A93329F491E080CA9712DBE /* Foundation.framework */; };
 		F9EDDEAE3064D4DFA688C419 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 45C6F98110A4B1293968EA24 /* Pods_RunnerTests.framework */; };
 /* End PBXBuildFile section */
@@ -74,6 +76,7 @@
 		19E5655D922A7B983358A704 /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
 		331C8081294A63A400263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		396904640717CE2D2916D5BB /* bell.wav */ = {isa = PBXFileReference; includeInIndex = 1; path = bell.wav; sourceTree = "<group>"; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
 		3BE7B94CB9877183024E0F63 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
 		45C6F98110A4B1293968EA24 /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -97,6 +100,7 @@
 		A070A630ED136E56F0F82D37 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A0BCDC5989854387815D3871 /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 		DFA05BC611B126850510668D /* Runner.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
+		F580DD4914728AA9502A5763 /* buzzer.wav */ = {isa = PBXFileReference; includeInIndex = 1; path = buzzer.wav; sourceTree = "<group>"; };
 		FFC932EC9615663FB52DD5C8 /* TimerWidgetBundle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TimerWidgetBundle.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -135,6 +139,16 @@
 				0A93329F491E080CA9712DBE /* Foundation.framework */,
 			);
 			name = iOS;
+			sourceTree = "<group>";
+		};
+		1846B26CECCB0D695D56606A /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				396904640717CE2D2916D5BB /* bell.wav */,
+				F580DD4914728AA9502A5763 /* buzzer.wav */,
+			);
+			name = Resources;
+			path = Resources;
 			sourceTree = "<group>";
 		};
 		3317FE101FB69AE15CBD7E44 /* Pods */ = {
@@ -229,6 +243,7 @@
 				7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 				DFA05BC611B126850510668D /* Runner.entitlements */,
+				1846B26CECCB0D695D56606A /* Resources */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -370,6 +385,8 @@
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
+				DAC09D78B0B885FCCC49C616 /* bell.wav in Resources */,
+				A190B515EABCDB4FB35C0128 /* buzzer.wav in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

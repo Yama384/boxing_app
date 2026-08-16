@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:live_activities/live_activities.dart';
 import 'timer_foreground_task.dart';
@@ -102,44 +103,110 @@ class BackgroundTimerController {
           soundAsset: phases[i].sound,
         );
       }
-      if (Platform.isIOS) {
-        await _startLiveActivity(phases.first);
-      }
     }
   }
 
-  /// Startet die Sperrbildschirm-/Dynamic-Island-Anzeige für die aktuelle
-  /// Phase. Der Countdown selbst tickt danach nativ in SwiftUI weiter
-  /// (`Text(timerInterval:)`), ohne dass die App im Hintergrund laufen
-  /// müsste. Einschränkung ohne eigenen Push-Server: bei einem
-  /// Intervall-Timer mit mehreren Phasen wechselt die angezeigte
-  /// Phasen-Beschriftung (z.B. "Runde 1/2" -> "Pause") während die App im
-  /// Hintergrund ist NICHT automatisch mit -- nur die Zahl zählt korrekt
-  /// weiter. Beim nächsten App-Start/Vordergrund wird sie wieder korrekt.
-  static Future<void> _startLiveActivity(TimerPhase current) async {
+  /// Startet die Sperrbildschirm-/Dynamic-Island-Anzeige. Muss aufgerufen
+  /// werden, während die App noch im Vordergrund ist (z.B. direkt beim
+  /// Antippen von "Start") -- ActivityKit lehnt `Activity.request()` mit
+  /// "target is not foreground" ab, wenn die App bereits im Hintergrund ist,
+  /// daher NICHT von [enterBackground] aus aufrufbar. Der Countdown tickt
+  /// danach nativ in SwiftUI weiter (`Text(timerInterval:)`), ohne dass die
+  /// App im Hintergrund laufen müsste. Einschränkung ohne eigenen
+  /// Push-Server: bei einem Intervall-Timer mit mehreren Phasen wechselt die
+  /// angezeigte Phasen-Beschriftung (z.B. "Runde 1/2" -> "Pause") nur mit,
+  /// wenn [updateLiveActivity] beim Phasenwechsel aufgerufen wird (klappt
+  /// also nur, während die App noch im Vordergrund ist).
+  static Future<void> startLiveActivity(TimerPhase current) async {
+    if (!Platform.isIOS) return;
     await _initLiveActivitiesIfNeeded();
     if (!await _liveActivities.areActivitiesEnabled()) return;
-    _activeActivityId = await _liveActivities.createActivity(
-      'boxing_app_timer',
-      {
-        'label': current.activeLabel,
-        'endTimeMillis': current.at.millisecondsSinceEpoch,
-      },
-      iOSEnableRemoteUpdates: false,
-    );
+    try {
+      _activeActivityId = await _liveActivities.createActivity(
+        'boxing_app_timer',
+        {
+          'mode': 'countdown',
+          'label': current.activeLabel,
+          'endTimeMillis': current.at.millisecondsSinceEpoch,
+        },
+        // Verhindert eine verwaiste, nie beendete Live Activity, falls die
+        // App abstürzt oder vom System beendet wird, statt normal über
+        // [endLiveActivity] zu laufen.
+        removeWhenAppIsKilled: true,
+        iOSEnableRemoteUpdates: false,
+      );
+    } on PlatformException {
+      // Bestmöglicher Versuch -- z.B. wenn der Nutzer Live Activities für
+      // diese App deaktiviert hat. Der Timer selbst läuft unabhängig davon
+      // normal weiter, nur ohne Sperrbildschirm-/Dynamic-Island-Anzeige.
+    }
   }
 
-  /// Aufräumen, wenn die App wieder im Vordergrund ist oder der Timer
-  /// manuell pausiert/zurückgesetzt wird -- unabhängig davon, ob gerade
-  /// überhaupt etwas im Hintergrund lief (dann sind die Aufrufe No-Ops).
+  /// Wie [startLiveActivity], aber für die Stoppuhr: zählt ab [startTime]
+  /// hoch statt auf einen Ziel-Zeitpunkt runter (native SwiftUI-Anzeige via
+  /// `Text(_:style: .timer)`).
+  static Future<void> startStopwatchLiveActivity(
+    String label,
+    DateTime startTime,
+  ) async {
+    if (!Platform.isIOS) return;
+    await _initLiveActivitiesIfNeeded();
+    if (!await _liveActivities.areActivitiesEnabled()) return;
+    try {
+      _activeActivityId = await _liveActivities.createActivity(
+        'boxing_app_timer',
+        {
+          'mode': 'stopwatch',
+          'label': label,
+          'startTimeMillis': startTime.millisecondsSinceEpoch,
+        },
+        removeWhenAppIsKilled: true,
+        iOSEnableRemoteUpdates: false,
+      );
+    } on PlatformException {
+      // Bestmöglicher Versuch, siehe startLiveActivity.
+    }
+  }
+
+  /// Aktualisiert Label/Ziel-Zeitpunkt der laufenden Live Activity bei einem
+  /// Phasenwechsel (Runde -> Pause -> ...) -- No-op, falls gerade keine
+  /// Aktivität läuft oder die App bereits im Hintergrund ist (dort kommt
+  /// dieser Aufruf ohnehin nicht mehr an, siehe [startLiveActivity]).
+  static Future<void> updateLiveActivity(TimerPhase current) async {
+    if (!Platform.isIOS || _activeActivityId == null) return;
+    try {
+      await _liveActivities.updateActivity(_activeActivityId!, {
+        'mode': 'countdown',
+        'label': current.activeLabel,
+        'endTimeMillis': current.at.millisecondsSinceEpoch,
+      });
+    } catch (_) {
+      // Bestmögliche Aktualisierung -- ein Fehlschlag hier lässt die
+      // Live Activity bei der letzten bekannten Phase stehen, kein Grund
+      // den laufenden Timer selbst zu unterbrechen.
+    }
+  }
+
+  /// Beendet die Live Activity -- aufrufen, wenn der Timer selbst stoppt
+  /// (pausiert, zurückgesetzt oder fertig), NICHT beim bloßen Rückkehren in
+  /// den Vordergrund (siehe [leaveBackground]), sonst könnte sie beim
+  /// nächsten Verlassen der App nicht mehr neu gestartet werden.
+  static Future<void> endLiveActivity() async {
+    if (Platform.isIOS && _activeActivityId != null) {
+      await _liveActivities.endActivity(_activeActivityId!);
+      _activeActivityId = null;
+    }
+  }
+
+  /// Aufräumen, wenn die App wieder im Vordergrund ist -- unabhängig davon,
+  /// ob gerade überhaupt etwas im Hintergrund lief (dann sind die Aufrufe
+  /// No-Ops). Beendet bewusst NICHT die Live Activity (siehe
+  /// [endLiveActivity]), die soll über mehrere Hintergrund-Ausflüge hinweg
+  /// laufen, solange der Timer noch läuft.
   static Future<void> leaveBackground() async {
     await TimerNotifications.cancelAll();
     if (Platform.isAndroid && await FlutterForegroundTask.isRunningService) {
       await FlutterForegroundTask.stopService();
-    }
-    if (Platform.isIOS && _activeActivityId != null) {
-      await _liveActivities.endActivity(_activeActivityId!);
-      _activeActivityId = null;
     }
   }
 

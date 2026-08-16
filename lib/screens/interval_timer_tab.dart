@@ -134,6 +134,12 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
     }
   }
 
+  String _labelFor(AppStrings s, _Phase phase, int round) {
+    return phase == _Phase.round
+        ? '${s('round')} $round / $_totalRounds'
+        : s('pause');
+  }
+
   /// Alle noch kommenden Phasenwechsel ab dem aktuellen Ziel-Zeitpunkt --
   /// für den Hintergrund-Dienst/die geplanten Benachrichtigungen. Auf 60
   /// begrenzt, damit auf iOS nie mehr als das dortige Limit für geplante
@@ -148,9 +154,7 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
     while (phases.length < 60) {
       final next = _nextStep(phase, round);
       final sound = phase == _Phase.round ? 'bell' : 'buzzer';
-      final activeLabel = phase == _Phase.round
-          ? '${s('round')} $round / $_totalRounds'
-          : s('pause');
+      final activeLabel = _labelFor(s, phase, round);
       final alertTitle = next == null
           ? s('trainingDone')
           : (next.phase == _Phase.pause
@@ -204,6 +208,17 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
       _hasStarted = true;
     });
 
+    final s = AppStrings.of(AppSettings.locale.value);
+    BackgroundTimerController.startLiveActivity(
+      TimerPhase(
+        at: _endTime!,
+        activeLabel: _labelFor(s, _phase, _currentRound),
+        alertTitle: _labelFor(s, _phase, _currentRound),
+        alertBody: s('timer'),
+        sound: _phase == _Phase.round ? 'bell' : 'buzzer',
+      ),
+    );
+
     _ringController.forward();
     _startTicking();
   }
@@ -232,6 +247,7 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
         _isRunning = false;
         _isFinished = true;
       });
+      BackgroundTimerController.endLiveActivity();
       _playAlert(_Phase.round);
       return;
     }
@@ -243,6 +259,16 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
       _remainingSeconds = next.durationSeconds;
     });
     _endTime = DateTime.now().add(Duration(seconds: next.durationSeconds));
+    final s = AppStrings.of(AppSettings.locale.value);
+    BackgroundTimerController.updateLiveActivity(
+      TimerPhase(
+        at: _endTime!,
+        activeLabel: _labelFor(s, _phase, _currentRound),
+        alertTitle: _labelFor(s, _phase, _currentRound),
+        alertBody: s('timer'),
+        sound: _phase == _Phase.round ? 'bell' : 'buzzer',
+      ),
+    );
     _ringController
       ..duration = Duration(seconds: next.durationSeconds)
       ..value = 0
@@ -275,6 +301,7 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
         _ringController
           ..stop()
           ..value = 1;
+        BackgroundTimerController.endLiveActivity();
         return;
       }
       time = time.add(Duration(seconds: next.durationSeconds));
@@ -301,6 +328,7 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
     _timer?.cancel();
     _ringController.stop();
     BackgroundTimerController.leaveBackground();
+    BackgroundTimerController.endLiveActivity();
     setState(() => _isRunning = false);
   }
 
@@ -309,6 +337,7 @@ class _IntervalTimerTabState extends State<IntervalTimerTab>
     _ringController
       ..stop()
       ..value = 0;
+    BackgroundTimerController.endLiveActivity();
     BackgroundTimerController.leaveBackground();
     _endTime = null;
     setState(() {
