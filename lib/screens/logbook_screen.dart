@@ -26,6 +26,7 @@ class _LogbookScreenState extends State<LogbookScreen> {
   final _achievementsKey = GlobalKey();
   final _focusKey = GlobalKey();
   final _goalsKey = GlobalKey();
+  final _addTrainingKey = GlobalKey();
   final _historySearchKey = GlobalKey();
   final _historyFilterKey = GlobalKey();
   final _analysisWeekRecapKey = GlobalKey();
@@ -67,6 +68,10 @@ class _LogbookScreenState extends State<LogbookScreen> {
         CoachTourStep(
           anchorKey: _goalsKey,
           message: s('coachTourGoalsSection'),
+        ),
+        CoachTourStep(
+          anchorKey: _addTrainingKey,
+          message: s('coachTourAddTrainingEntry'),
         ),
       ],
       _LogbookView.history => [
@@ -240,6 +245,7 @@ class _LogbookScreenState extends State<LogbookScreen> {
             ],
           ),
           floatingActionButton: FloatingActionButton.extended(
+            key: _addTrainingKey,
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const AddTrainingEntryScreen()),
             ),

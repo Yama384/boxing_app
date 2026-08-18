@@ -12,6 +12,7 @@ import 'training_plan_data.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await AppSettings.load();
   await LogbookData.load();
   await StrengthData.load();
   await TrainingPlanData.load();

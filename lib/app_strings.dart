@@ -63,8 +63,7 @@ const Map<String, Map<String, String>> _translations = {
     'noExercisesYet': 'Noch keine Übungen',
     'noExercisesYetSubtitle':
         'Füg mit dem "+"-Button deine erste Kraftübung hinzu.',
-    'noEntriesYet':
-        'Noch keine Einträge -- trag nach deiner nächsten Trainingseinheit deine Maximalkraft ein',
+    'noEntriesYet': 'Noch keine Einträge',
     'lastEntry': 'Zuletzt',
     'weekdayMonday': 'Montag',
     'weekdayTuesday': 'Dienstag',
@@ -258,6 +257,8 @@ const Map<String, Map<String, String>> _translations = {
         'Erfolge, die du dir mit deinen Trainings erarbeitest. Tipp auf einen freigeschalteten oder gesperrten Erfolg für Details.',
     'coachTourGoalsSection':
         'Hier findest du alle deine aktiven Ziele. Tipp drauf, um Fortschritt einzutragen oder sie zu bearbeiten.',
+    'coachTourAddTrainingEntry':
+        'Hier kannst du dein tägliches Training eintragen. Du musst nicht alles ausfüllen, aber je mehr du ausfüllst, desto besser lässt es sich später analysieren.',
     'coachTourHistorySearch':
         'Durchsuche deine Trainingseinträge nach Stichworten, z.B. aus deinen Notizen.',
     'coachTourHistoryFilter':
@@ -658,6 +659,8 @@ const Map<String, Map<String, String>> _translations = {
         "Milestones you earn through training. Tap an unlocked or locked achievement for details.",
     'coachTourGoalsSection':
         "Here you'll find all your active goals. Tap one to log progress or edit it.",
+    'coachTourAddTrainingEntry':
+        "This is where you log your daily training. You don't have to fill in everything, but the more you fill in, the better it is for analyzing later.",
     'coachTourHistorySearch':
         'Search your training entries by keyword, e.g. from your notes.',
     'coachTourHistoryFilter':

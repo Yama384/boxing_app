@@ -341,7 +341,7 @@ class _LogbookAnalysisTabState extends State<LogbookAnalysisTab> {
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                reservedSize: 24,
+                reservedSize: 28,
                 interval: (maxX - minX) / 3 < 1 ? 1 : (maxX - minX) / 3,
                 // Gleicher Grund wie oben: verhindert ein doppelt
                 // gerendertes Datum am Rand, wenn der exakte erste/letzte
@@ -353,7 +353,7 @@ class _LogbookAnalysisTabState extends State<LogbookAnalysisTab> {
                     value.round(),
                   );
                   return Padding(
-                    padding: const EdgeInsets.only(top: 4),
+                    padding: const EdgeInsets.only(top: 8),
                     child: Text(
                       '${date.day}.${date.month}',
                       style: TextStyle(
@@ -968,8 +968,8 @@ class _LogbookAnalysisTabState extends State<LogbookAnalysisTab> {
                         widget.s,
                         entries: entries,
                         valueOf: (e) => e.rating.toDouble(),
-                        minY: 0.5,
-                        maxY: 5.5,
+                        minY: 0.0,
+                        maxY: 6.0,
                         color: Colors.amber,
                       ),
                     ),
@@ -983,8 +983,8 @@ class _LogbookAnalysisTabState extends State<LogbookAnalysisTab> {
                         widget.s,
                         entries: entries,
                         valueOf: (e) => _intensityValue(e.intensity).toDouble(),
-                        minY: 0.5,
-                        maxY: 4.5,
+                        minY: 0.0,
+                        maxY: 5.0,
                         color: primary,
                       ),
                     ),
@@ -1007,8 +1007,8 @@ class _LogbookAnalysisTabState extends State<LogbookAnalysisTab> {
                           widget.s,
                           entries: entries,
                           valueOf: (e) => e.techniqueSuccessRating?.toDouble(),
-                          minY: 0.5,
-                          maxY: 5.5,
+                          minY: 0.0,
+                          maxY: 6.0,
                           color: Colors.lightBlueAccent,
                         ),
                       ),

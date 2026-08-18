@@ -42,7 +42,7 @@ class SettingsScreen extends StatelessWidget {
                   return ChoiceChip(
                     label: Text(entry.key),
                     selected: isSelected,
-                    onSelected: (_) => AppSettings.locale.value = entry.value,
+                    onSelected: (_) => AppSettings.setLocale(entry.value),
                   );
                 }).toList(),
               ),
@@ -66,7 +66,7 @@ class SettingsScreen extends StatelessWidget {
                     children: _colorOptions.entries.map((entry) {
                       final isSelected = entry.value == selectedColor;
                       return GestureDetector(
-                        onTap: () => AppSettings.seedColor.value = entry.value,
+                        onTap: () => AppSettings.setSeedColor(entry.value),
                         child: Column(
                           children: [
                             Container(
@@ -102,7 +102,7 @@ class SettingsScreen extends StatelessWidget {
                     title: Text(s('soundToggleTitle')),
                     subtitle: Text(s('soundToggleSubtitle')),
                     value: enabled,
-                    onChanged: (value) => AppSettings.soundEnabled.value = value,
+                    onChanged: (value) => AppSettings.setSoundEnabled(value),
                   );
                 },
               ),

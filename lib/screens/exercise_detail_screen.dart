@@ -507,7 +507,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 28,
+              reservedSize: 32,
               interval: (maxX - minX) / 3 < 1 ? 1 : (maxX - minX) / 3,
               // Gleicher Grund wie oben: verhindert ein doppelt gerendertes
               // Datum am Rand, wenn der exakte erste/letzte Zeitstempel
@@ -517,7 +517,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
               getTitlesWidget: (value, meta) {
                 final date = DateTime.fromMillisecondsSinceEpoch(value.round());
                 return Padding(
-                  padding: const EdgeInsets.only(top: 6),
+                  padding: const EdgeInsets.only(top: 10),
                   child: Text(
                     '${date.day}.${date.month}',
                     style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
